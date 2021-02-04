@@ -26,6 +26,7 @@ class Mapper:
 
     def getPoint(self):
         midpoint
+        # Test
         p = cv.perspectiveTransform(point, self.H)
         x, y = arrayToInt(p)
         return x, y
