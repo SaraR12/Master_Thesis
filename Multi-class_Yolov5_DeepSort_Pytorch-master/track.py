@@ -26,6 +26,10 @@ from deep_sort.deep_sort import DeepSort
 
 # Mapping
 from Mapping.mapper import Mapper
+pts_src = np.array([[1017,883],[1335,616],[651,611],[533,525],[291,430],[470,477],[1533,492]])
+pts_dst = np.array([[1680,864],[1679,569],[1375,864],[1197,864],[822,941],[1068,864],[1708,270]])
+
+PLANAR_MAP = cv2.imread('Mapping/plane.png') # Planar map
 
 import yaml
 
@@ -55,6 +59,7 @@ def compute_color_for_labels(label):
 
 
 def draw_boxes(img, bbox, cls_names, scores, identities=None, offset=(0,0)):
+    mapperObject = Mapper(PLANAR_MAP, pts_src, pts_dst)
     for i, box in enumerate(bbox):
         x1, y1, x2, y2 = [int(i) for i in box]
         x1 += offset[0]
@@ -70,14 +75,22 @@ def draw_boxes(img, bbox, cls_names, scores, identities=None, offset=(0,0)):
         cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
         cv2.rectangle(img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-    return img
+
+        # Mapping to plane
+        mappedImg = mapperObject.mapFromBoundingBox(x1,x2,y1,y2, color)
+
+    return img, mappedImg
 
 
 def detect(opt, device, save_img=False):
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
-    
+
+    # Initialize mapping algorithm
+    mapper1 = Mapper(PLANAR_MAP, pts_src, pts_dst)
+
+
     # Read Class Name Yaml
     with open(opt.data) as f:
         data_dict = yaml.load(f, Loader=yaml.FullLoader)
@@ -198,13 +211,16 @@ def detect(opt, device, save_img=False):
                 
                 # draw boxes for visualization
                 if len(outputs) > 0:
+
                     bbox_tlwh = []
                     bbox_xyxy = outputs[:, :4]
                     identities = outputs[:, 4]
                     clses = outputs[:, 5]
                     scores = outputs[:, 6]
                     stays = outputs[:, 7]
-                    draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, identities)
+                    im0, mappedImg = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, identities)
+                else:
+                    mappedImg = PLANAR_MAP
 
                     
                     # Print time (inference + NMS)
@@ -213,7 +229,9 @@ def detect(opt, device, save_img=False):
 
             # Stream results
             if True:
+                #numpy_horizontal = np.hstack((im0, mappedImg))
                 cv2.imshow(p, im0)
+                cv2.imshow('1',mappedImg)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
 
