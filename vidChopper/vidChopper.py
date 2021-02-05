@@ -1,7 +1,7 @@
 import cv2
 
 # Set Path
-videoPath = './input/vid6.mkv'
+videoPath = './input/simtest05FEB.mkv'
 cap = cv2.VideoCapture(videoPath)
 
 
@@ -10,7 +10,7 @@ filetype = '.png'
 folder = './output/'
 
 # Start naming pictures at index:
-startIndex = 291
+startIndex = 351
 
 ret = True
 index = startIndex
