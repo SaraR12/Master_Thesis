@@ -226,12 +226,13 @@ def detect(opt, device, save_img=False):
                     # Print time (inference + NMS)
             #print('%sDone. (%.3fs)' % (s, t2 - t1))
             print('FPS=%.2f' % (1/(t3 - t1)))
-
+            time.sleep(1)
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
                 cv2.imshow(p, im0)
                 cv2.imshow('1',mappedImg)
+
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
 
