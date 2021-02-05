@@ -226,7 +226,8 @@ def detect(opt, device, save_img=False):
                     # Print time (inference + NMS)
             #print('%sDone. (%.3fs)' % (s, t2 - t1))
             print('FPS=%.2f' % (1/(t3 - t1)))
-            time.sleep(1)
+            if cv2.waitKey(0) == 33:
+                continue
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
