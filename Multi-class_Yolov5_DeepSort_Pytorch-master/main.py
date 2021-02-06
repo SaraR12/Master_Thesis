@@ -251,6 +251,7 @@ def detect(opt, save_img=False):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/prod_line.yaml', help='data yaml path')
