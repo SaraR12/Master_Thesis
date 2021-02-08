@@ -1,7 +1,7 @@
 import cv2
 
 # Set Path
-videoPath = './input/simtest05FEB.mkv'
+videoPath = './input/simtest05FEB3.mkv'
 cap = cv2.VideoCapture(videoPath)
 
 
@@ -10,14 +10,14 @@ filetype = '.png'
 folder = './output/'
 
 # Start naming pictures at index:
-startIndex = 351
+startIndex = 1000
 
 ret = True
 index = startIndex
 while ret:
     ret, frame = cap.read()
 
-    if index % 5 == 0:
+    if index % 50 == 0:
         filename = folder + str(startIndex) + filetype
         print(filename)
         cv2.imwrite(filename, frame)
