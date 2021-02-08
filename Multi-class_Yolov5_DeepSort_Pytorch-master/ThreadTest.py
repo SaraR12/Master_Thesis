@@ -4,14 +4,14 @@ import torch
 import torch.backends.cudnn as cudnn
 import threading, queue
 
-from track import rocknroll
+from track import runTracker
 
-def runTracker1(path):
-    q.put(rocknroll(path))
+def trackerCameraWest(path):
+    q.put(runTracker(path))
 
 
-def runTracker2(path):
-    q2.put(rocknroll(path))
+def trackerCameraSouthWest(path):
+    q2.put(runTracker(path))
 
 
 def consumer():
@@ -25,8 +25,8 @@ if __name__ == '__main__':
 
     q = queue.Queue()
     q2 = queue.Queue()
-    thread1 = threading.Thread(target=runTracker1, args=('vid4.mkv',)).start()
-    thread2 = threading.Thread(target=runTracker2, args=('vid6.mkv',)).start()
+    thread1 = threading.Thread(target=trackerCameraWest, args=('vid4.mkv',)).start()
+    thread2 = threading.Thread(target=trackerCameraSouthWest, args=('vid6.mkv',)).start()
     consumerThread = threading.Thread(target=consumer).start()
 
 
