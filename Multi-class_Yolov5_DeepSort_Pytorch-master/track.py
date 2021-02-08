@@ -228,6 +228,9 @@ def detect(opt, device, save_img=False):
                     scores = outputs[:, 6]
                     stays = outputs[:, 7]
                     im0, mappedImg = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, identities)
+
+                    # Send the boundingboxes (and info such as class and id) out from the function
+                    yield outputs
                 else:
                     mappedImg = PLANAR_MAP
 
@@ -235,6 +238,8 @@ def detect(opt, device, save_img=False):
                     # Print time (inference + NMS)
             #print('%sDone. (%.3fs)' % (s, t2 - t1))
             print('FPS=%.2f' % (1/(t3 - t1)))
+
+            # Comment out if you dont want to step through video
             if cv2.waitKey(0) == 33:
                 continue
             # Stream results
@@ -303,3 +308,36 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         detect(args, device)
+
+def runTracker(path):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
+    parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path')  # Class names
+    parser.add_argument('--source', type=str, default=path, help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
+    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    # class 0 is person
+    parser.add_argument('--classes', nargs='+', type=int, default=[0], help='filter by class')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
+    parser.add_argument("--config_deepsort", type=str, default="deep_sort/configs/deep_sort.yaml")
+    args = parser.parse_args()
+    args.img_size = check_img_size(args.img_size)
+    print(args)
+
+    # Select GPU
+    device = select_device(args.device)
+    import torch
+    import torch.backends.cudnn as cudnn
+
+    half = device.type != 'cpu'  # half precision only supported on CUDA
+
+    with torch.no_grad():
+        out = detect(args, device)
+        yield out
