@@ -23,7 +23,8 @@ from yolov5.utils.torch_utils import select_device, load_classifier, time_synchr
 
 from deep_sort.utils.parser import get_config
 from deep_sort.deep_sort import DeepSort
-
+import torch
+import torch.backends.cudnn as cudnn
 # Mapping
 from Mapping.mapper import Mapper
 
@@ -66,6 +67,8 @@ def compute_color_for_labels(label):
 
 def draw_boxes(img, bbox, cls_names, scores, identities=None, offset=(0,0)):
     mapperObject = Mapper(PLANAR_MAP, pts_src, pts_dst)
+
+    allMappedPoints = []
     for i, box in enumerate(bbox):
         x1, y1, x2, y2 = [int(i) for i in box]
         x1 += offset[0]
@@ -83,16 +86,17 @@ def draw_boxes(img, bbox, cls_names, scores, identities=None, offset=(0,0)):
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
 
         # Mapping to plane
-        mappedImg = mapperObject.mapFromBoundingBox(x1,x2,y1,y2, color)
+        mappedImg, mappedPoint = mapperObject.mapFromBoundingBox(x1,x2,y1,y2, color)
+        allMappedPoints.append(mappedPoint)
 
-    return img, mappedImg
+    return img, mappedImg, allMappedPoints
 
 
 def detect(opt, device, save_img=False):
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
-
+    half = device.type != 'cpu'  # half precision only supported on CUDA
     # Initialize mapping algorithm
     mapper1 = Mapper(PLANAR_MAP, pts_src, pts_dst)
 
@@ -152,7 +156,9 @@ def detect(opt, device, save_img=False):
     t0 = time.time()
     img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
     _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
+    frame = 0
     for path, img, im0s, vid_cap in dataset:
+        frame += 1
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -173,6 +179,7 @@ def detect(opt, device, save_img=False):
 
 
         # Process detections
+
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
                 p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
@@ -227,17 +234,18 @@ def detect(opt, device, save_img=False):
                     clses = outputs[:, 5]
                     scores = outputs[:, 6]
                     stays = outputs[:, 7]
-                    im0, mappedImg = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, identities)
+                    im0, mappedImg, mappedPoint = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, identities)
 
                     # Send the boundingboxes (and info such as class and id) out from the function
-                    yield outputs
+                    yield mappedPoint
+
                 else:
                     mappedImg = PLANAR_MAP
 
                     
                     # Print time (inference + NMS)
             #print('%sDone. (%.3fs)' % (s, t2 - t1))
-            print('FPS=%.2f' % (1/(t3 - t1)))
+            #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
             if cv2.waitKey(0) == 33:
@@ -266,7 +274,6 @@ def detect(opt, device, save_img=False):
                         h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*opt.fourcc), fps, (w, h))
                     vid_writer.write(im0)
-                    
         #print('Inference Time = %.2f' % (time_synchronized() - t1))
         #print('FPS=%.2f' % (1/(time_synchronized() - t1)))
 
@@ -278,11 +285,11 @@ def detect(opt, device, save_img=False):
             # test
 
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='CameraWest.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
@@ -307,9 +314,10 @@ if __name__ == '__main__':
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     with torch.no_grad():
-        detect(args, device)
+        detect(args, device)"""
 
-def runTracker(path):
+def run(path):
+    print(path)
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path')  # Class names
@@ -340,4 +348,4 @@ def runTracker(path):
 
     with torch.no_grad():
         out = detect(args, device)
-        yield out
+        return out

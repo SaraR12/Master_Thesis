@@ -1,44 +1,43 @@
-import multiprocessing as mp # https://www.kth.se/blogs/pdc/2019/02/parallel-programming-in-python-multiprocessing-part-1/
-import os
-import torch
-import torch.backends.cudnn as cudnn
 import threading, queue
 
-from track import runTracker
+import track
+from triangulation import testFunc
 
 def trackerCameraWest(path):
-    q.put(runTracker(path))
-
+    q.put(track.run(path))
 
 def trackerCameraSouthWest(path):
-    q2.put(runTracker(path))
+    q2.put(track.run(path))
 
 def trackerCameraMiddleFacingWestSouth(path):
-    q3.put(runTracker(path))
+    q3.put(track.run(path))
 
 
 def consumer():
     itemCamWest = q.get()
-    itemCamSouthWest = q2.get()
-    itemCamMiddleFacingWestSouth = q3.get()
+    #itemCamSouthWest = q2.get()
+    #itemCamMiddleFacingWestSouth = q3.get()
+    #for i, j in zip(itemCamWest, itemCamSouthWest):
+        #print(i, "--", j)
 
-    for outputWest, outputSouthWest, outputMiddleWestSouth in zip(itemCamWest, itemCamSouthWest, itemCamMiddleFacingWestSouth):
-
-
-    for x, x2 in zip(item,item2):
-        for i,i2 in zip(x,x2):
-            print(i,i2)
+    #
+    for i in itemCamWest:
+        testFunc(i)
+    """for outputWest, outputSouthWest, outputMiddleWestSouth in zip(itemCamWest, itemCamSouthWest, itemCamMiddleFacingWestSouth):
+        for i,j,k in zip(outputWest,outputSouthWest,outputMiddleWestSouth):
+            print('i ', i, '\n')
+            print('j ', j, '\n')
+            print('k ', k, '\n')"""
 
 if __name__ == '__main__':
-
     q = queue.Queue()
     q2 = queue.Queue()
     q3 = queue.Queue()
 
     # Produce
     threadCameraWest = threading.Thread(target=trackerCameraWest, args=('CameraWest.mkv',)).start()
-    threadCameraSouthWest = threading.Thread(target=trackerCameraSouthWest, args=('CameraSouthWest.mkv',)).start()
-    threadCameraMiddleFacingWestSouth = threading.Thread(target=trackerCameraSouthWest, args=('CameraMiddleFacingWestSouth.mkv',)).start()
+    #threadCameraSouthWest = threading.Thread(target=trackerCameraSouthWest, args=('CameraSouthWest.mkv',)).start()
+    #threadCameraMiddleFacingWestSouth = threading.Thread(target=trackerCameraSouthWest, args=('CameraMiddelFacingWestSouth.mkv',)).start()
 
     # Consumer
     consumerThread = threading.Thread(target=consumer).start()
