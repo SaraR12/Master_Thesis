@@ -91,6 +91,7 @@ def draw_boxes(img, bbox, cls_names, scores, identities=None, offset=(0,0)):
         # Mapping to plane
         mappedImg, mappedPoint = mapperObject.mapFromBoundingBox(x1,x2,y1,y2, color)
         allMappedPoints.append(mappedPoint)
+        allMappedPoints.append(id)
 
     return img, mappedImg, allMappedPoints
 
