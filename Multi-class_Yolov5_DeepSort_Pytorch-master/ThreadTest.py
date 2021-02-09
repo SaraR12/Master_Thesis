@@ -1,7 +1,7 @@
 import threading, queue
 
 import track
-from triangulation import testFunc
+#from triangulation import testFunc
 
 def trackerCameraWest(path):
     q.put(track.run(path))
@@ -22,7 +22,8 @@ def consumer():
 
     #
     for i in itemCamWest:
-        testFunc(i)
+        print(i)
+       # testFunc(i)
     """for outputWest, outputSouthWest, outputMiddleWestSouth in zip(itemCamWest, itemCamSouthWest, itemCamMiddleFacingWestSouth):
         for i,j,k in zip(outputWest,outputSouthWest,outputMiddleWestSouth):
             print('i ', i, '\n')
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     q3 = queue.Queue()
 
     # Produce
-    threadCameraWest = threading.Thread(target=trackerCameraWest, args=('CameraWest.mkv',)).start()
+    threadCameraWest = threading.Thread(target=trackerCameraWest, args=('CameraMiddelFacingWestSouth.mkv',)).start()
     #threadCameraSouthWest = threading.Thread(target=trackerCameraSouthWest, args=('CameraSouthWest.mkv',)).start()
     #threadCameraMiddleFacingWestSouth = threading.Thread(target=trackerCameraSouthWest, args=('CameraMiddelFacingWestSouth.mkv',)).start()
 
