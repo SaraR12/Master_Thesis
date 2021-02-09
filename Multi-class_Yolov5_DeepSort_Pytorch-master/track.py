@@ -27,14 +27,17 @@ import torch
 import torch.backends.cudnn as cudnn
 # Mapping
 from Mapping.mapper import Mapper
+from homographies import getKeypoints
 
 # CameraSouthEast
 #pts_src = np.array([[1017,883],[1335,616],[651,611],[533,525],[291,430],[470,477],[1533,492]])
 #pts_dst = np.array([[1680,864],[1679,569],[1375,864],[1197,864],[822,941],[1068,864],[1708,270]])
 
 # CameraWest
-pts_src = np.array([[505,723],[1164,411],[1248,208],[810,285],[76,711],[687,461],[878,410]]) # Camera
-pts_dst = np.array([[327,401],[892,864],[1857,1075],[1378,404],[327,105],[753,402],[891,568]]) # Overview
+#pts_src = np.array([[505,723],[1164,411],[1248,208],[810,285],[76,711],[687,461],[878,410]]) # Camera
+#pts_dst = np.array([[327,401],[892,864],[1857,1075],[1378,404],[327,105],[753,402],[891,568]]) # Overview
+
+pts_src, pts_dst = getKeypoints('CameraMiddelFacingWestSouth')
 
 PLANAR_MAP = cv2.imread('Mapping/plane.png') # Planar map
 
