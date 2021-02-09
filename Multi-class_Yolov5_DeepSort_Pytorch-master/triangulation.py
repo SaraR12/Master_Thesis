@@ -7,4 +7,4 @@ class Triangulator:
         self.camPos = cameraPos
 
     def triangulate(self, projPoints1, projPoints2):
-        if
+        pass
