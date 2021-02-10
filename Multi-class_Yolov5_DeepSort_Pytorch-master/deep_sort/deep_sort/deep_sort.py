@@ -1,4 +1,4 @@
-import numpy as np
+ import numpy as np
 import torch
 
 from .deep.feature_extractor import Extractor
