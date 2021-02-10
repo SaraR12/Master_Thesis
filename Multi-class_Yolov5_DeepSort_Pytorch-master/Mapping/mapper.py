@@ -46,5 +46,5 @@ class Mapper:
 
 
         mappedPoint = self.getPoint(midpoint)
-        mappedImg = cv.circle(self.planarView, mappedPoint, 5, markerColor, 3)
+        mappedImg = cv.circle(self.planarView, mappedPoint, 3, markerColor, 3)
         return mappedImg, mappedPoint
