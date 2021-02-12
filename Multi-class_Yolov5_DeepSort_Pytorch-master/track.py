@@ -63,6 +63,8 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
     mapperObject = Mapper(PLANAR_MAP, pts_src, pts_dst)
 
     allMappedPoints = []
+    mappedImg = cv2.imread('Mapping/plane.png') #PLANAR_MAP
+
     for i, box in enumerate(bbox):
         x1, y1, x2, y2 = [int(i) for i in box]
         x1 += offset[0]
@@ -80,10 +82,16 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
 
         # Mapping to plane
-        mappedImg, mappedPoint = mapperObject.mapFromBoundingBox(x1,x2,y1,y2, color)
-        allMappedPoints.append(mappedPoint)
+        x1m, x2m, y1m, y2m, color = mapperObject.mapBoundingBoxPoints(x1,x2,y1,y2, color)
+        cv2.line(mappedImg, (x1m, y1m), (x1m, y2m), color, 2) # left line
+        cv2.line(mappedImg, (x2m, y1m), (x2m, y2m), color, 2) # right line
+        cv2.line(mappedImg, (x1m, y1m), (x2m, y1m), color, 2) # top line
+        cv2.line(mappedImg, (x1m, y2m), (x2m, y2m), color, 2) # bottom line
+        #cv2.rectangle(mappedImg, (x1m, y1m), (x2m, y2m), color, 1)
+        #allMappedPoints.append(mappedPoint)
 
-    return img, mappedImg, allMappedPoints
+
+    return img, mappedImg, allMappedPoints, mapperObject
 
 
 def detect(opt, device,camera, save_img=False):
@@ -225,10 +233,10 @@ def detect(opt, device,camera, save_img=False):
                     clses = outputs[:, 5]
                     scores = outputs[:, 6]
                     stays = outputs[:, 7]
-                    im0, mappedImg, mappedPoint = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores,camera, identities)
+                    im0, mappedImg, mappedPoint, mapperObjects = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, camera, identities)
 
                     # Send the boundingboxes (and info such as class and id) out from the function
-                    yield mappedPoint
+                    yield outputs
 
                 else:
                     mappedImg = PLANAR_MAP
@@ -239,13 +247,13 @@ def detect(opt, device,camera, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            if cv2.waitKey(0) == 33:
-                continue
+            #if cv2.waitKey(0) == 33:
+            #    continue
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
-                cv2.imshow(p, im0)
-                # cv2.imshow('1',mappedImg)
+                #cv2.imshow(p, im0)
+                #cv2.imshow('1',mappedImg)
 
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
@@ -315,8 +323,8 @@ def run(path, camera):
     parser.add_argument('--source', type=str, default=path, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
@@ -339,4 +347,14 @@ def run(path, camera):
 
     with torch.no_grad():
         out = detect(args, device, camera)
+
         return out
+
+        """if len(outputs) > 0:
+            bbox_xyxy = outputs[:, :4]
+            identities = outputs[:, 4]
+        else:
+            bbox_xyxy = []
+            identities = []"""
+
+
