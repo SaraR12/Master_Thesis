@@ -97,6 +97,7 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
 def detect(opt, device,camera, save_img=False):
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
+
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
     half = device.type != 'cpu'  # half precision only supported on CUDA
 

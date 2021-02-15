@@ -81,6 +81,13 @@ def consumer():
         identities4 = out4[:, 4]
 
         bbox_xyxy5 = out5[:, :4]
+        """print(bbox_xyxy5)
+        for i, box in enumerate(bbox_xyxy5):
+            y1 = box[1]
+            y2 = box[3]
+            bbox_xyxy5[i,1] = y2
+            bbox_xyxy5[i,3] = y1
+        print(bbox_xyxy5)"""
         identities5 = out5[:, 4]
 
         bbox_xyxy6 = out6[:, :4]
@@ -113,7 +120,7 @@ if __name__ == '__main__':
     q6 = queue.Queue()
 
     # Produce
-    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',)).start()
+    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoNW.mkv',)).start()
     threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',)).start()
     threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',)).start()
     threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',)).start()

@@ -44,41 +44,57 @@ def draw_bboxes(bboxlist):
 
 def iou_bboxes(bbox_list, mapObjects_list):
     bbox_all_list = np.array([[1,2,3,4]], dtype=int)
-    for (bbox, mapObject) in zip(bbox_list,mapObjects_list):
+    # Collect all bboxes
+    j = 0
+    for (bbox, mapObject) in zip(bbox_list, mapObjects_list):
         for i, box in enumerate(bbox):
-            x1, y1, x2, y2 = [int(i) for i in box]
+            x1c, y1c, x2c, y2c = [int(i) for i in box]
 
-            p1 = np.array([[x1, y1]], dtype='float32')
-            p2 = np.array([[x2, y2]], dtype='float32')
+
+            p1 = np.array([[x1c, y1c]], dtype='float32')
+            p2 = np.array([[x2c, y2c]], dtype='float32')
 
             p1 = np.array([p1])
             p2 = np.array([p2])
 
             x1, y1 = mapObject.getPoint(p1)
             x2, y2 = mapObject.getPoint(p2)
+            print('x1y1x2y2: ', x1,y1,x2,y2)
             bbox_w = abs(x2 - x1)
             bbox_h = abs(y2 - y1)
-            bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w]], axis=0)
+            if j == 4:
+                bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w]], axis=0)
+            else:
+                bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w]], axis=0)
+        j += 1
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
     candidates = np.copy(bbox_all_list)
 
     matches = np.array([[1, 2, 3, 4]], dtype=int)
+
     for bbox in bbox_all_list:
         candidates = np.delete(candidates, (0), axis=0)
-
+        print('Active bbox: ', bbox)
+        print(candidates)
         #print('candidates',candidates)
         if candidates.shape[0] > 1:
             candidate_IOU = iou(bbox, candidates)
-            matched_bbox = candidates[np.argmax(candidate_IOU), :]
+            if any(candidate_IOU):
+                index = np.argmax(candidate_IOU)
+                matched_bbox = candidates[index, :]
+            else:
+                matched_bbox = bbox
+            print('iou: ', candidate_IOU)
 
+
+            # Inverted coordinate-system (top left is (0,0))
             x1 = max(bbox[0], matched_bbox[0])
             y1 = min(bbox[1], matched_bbox[1])
 
-            x2 = max((bbox[0] + bbox[3]), (matched_bbox[0] + matched_bbox[3]))
-            y2 = min((bbox[1] - bbox[2]), (matched_bbox[1] - matched_bbox[2]))
+            x2 = min((bbox[0] + bbox[3]), (matched_bbox[0] + matched_bbox[3]))
+            y2 = min((bbox[1] + bbox[2]), (matched_bbox[1] + matched_bbox[2]))
 
-            print('bbox= ', bbox)
             print('matched bbox = ', matched_bbox)
             print('x1,y1,x2,y2 = ', x1, y1, x2, y2)
             if cv2.waitKey(0) == 33:
@@ -101,3 +117,41 @@ def compute_color_for_labels(label):
 
     color = [int((p * (label ** 2 - label + 1)) % 255) for p in palette]
     return tuple(color)
+
+def intersection(bbox, candidates):
+    bb1x1 = bbox[0]
+    bb1y1 = bbox[1]
+    bb1x2 = bbox[0] + bbox[3]
+    bb1y2 = bbox[1] + bbox[2]
+    area_of_bbox = bbox[2] * bbox[3]
+
+    # determine the coordinates of the intersection rectangle
+    for candidate in candidates:
+        bb2x1 = candidate[0]
+        bb2y1 = candidate[1]
+        bb2x2 = candidate[0] + candidate[3]
+        bb2y2 = candidate[1] + candidate[2]
+
+        x_left = max(bb1x1, bb2x1)
+        y_top = max(bb1y1, bb2y1)
+        x_right = min(bb1x2, bb2x2)
+        y_bottom = min(bb1y2, bb2y2)
+
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+
+    # The intersection of two axis-aligned bounding boxes is always an
+    # axis-aligned bounding box
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+
+    # compute the area of both AABBs
+    bb1_area = (bb1x2 - bb1['x1']) * (bb1['y2'] - bb1['y1'])
+    bb2_area = (bb2['x2'] - bb2['x1']) * (bb2['y2'] - bb2['y1'])
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    assert iou >= 0.0
+    assert iou <= 1.0
+    return iou
