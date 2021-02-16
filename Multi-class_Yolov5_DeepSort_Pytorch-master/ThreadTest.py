@@ -11,7 +11,7 @@ from homographies import *
 cameraPosWest = meterToPixel(-10.437, 8.9146)
 cameraPosMiddle = meterToPixel(24.168, 17.781)
 
-PLANE = cv2.imread('Mapping/plane.png')
+
 q1List = []
 q2List = []
 q3List = []
@@ -69,7 +69,15 @@ def trackerCamEN(path):
 
 
 def consumer():
+    PLANE = cv2.imread('Mapping/plane.png')
     pts_src, pts_dst = getKeypoints('WN')
+
+    CAP = cv2.VideoCapture('videos/VideoOrto.mkv')
+    ret, VIDEOFRAME = CAP.read()
+    print(VIDEOFRAME.shape)
+    VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
+    print(VIDEOFRAME.shape)
+
     mapObj1 = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("MSW")
@@ -90,8 +98,8 @@ def consumer():
     mapping_objects = [mapObj1, mapObj2, mapObj3, mapObj4, mapObj5, mapObj6]
 
     calculated_frames = []
-
-    while True:
+    i = 0
+    while i < 300:
         i = min(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
         """itemCamWN = q.get()
         itemCamMSW = q2.get()
@@ -105,13 +113,15 @@ def consumer():
         #print(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
         #print(q1List)
         #if (i > 0) and (i not in calculated_frames):
-        frame1, frame2, frame3, frame4, frame5, frame6 = [], [], [], [], [], []
-        print(i)
+        classes1, classes2, classes3, classes4, classes5, classes6 = np.array([]), np.array([]), np.array([]),\
+                                                                     np.array([]), np.array([]), np.array([])
+        #print(i)
         if all([q1List,q2List,q3List,q4List,q5List,q6List]):
             q1Value = q1List.pop(0)
             if q1Value[0] is not None:
                 bbox_xyxy1 = q1Value[0][:][:,:4]
                 identities1 = q1Value[0][:][:,4]
+                classes1 = q1Value[0][:][:,5]
                 frame1 = q1Value[0][:][0,7]
                 print('Frame at vid 1:', frame1)
             else:
@@ -122,6 +132,7 @@ def consumer():
             if q2Value[0] is not None:
                 bbox_xyxy2 = q2Value[0][:][:,:4]
                 identities2 = q2Value[0][:][:,4]
+                classes2 = q2Value[0][:][:,5]
                 frame2 = q2Value[0][:][0,7]
                 print('Frame at vid 2:', frame2)
             else:
@@ -133,6 +144,7 @@ def consumer():
             if q3Value[0] is not None:
                 bbox_xyxy3 = q3Value[0][:][:,:4]
                 identities3 = q3Value[0][:][:,4]
+                classes3 = q3Value[0][:][:,5]
                 frame3 = q3Value[0][:][0,7]
                 print('Frame at vid 3:', frame3)
             else:
@@ -143,6 +155,7 @@ def consumer():
             if q4Value[0] is not None:
                 bbox_xyxy4 = q4Value[0][:][:,:4]
                 identities4 = q4Value[0][:][:,4]
+                classes4 = q4Value[0][:][:,5]
                 frame4 = q4Value[0][:][0,7]
                 print('Frame at vid 4:', frame4)
             else:
@@ -153,6 +166,7 @@ def consumer():
             if q5Value[0] is not None:
                 bbox_xyxy5 = q5Value[0][:][:,:4]
                 identities5 = q5Value[0][:][:,4]
+                classes5 = q5Value[0][:][:,5]
                 frame5 = q5Value[0][:][0,7]
                 print('Frame at vid 5:', frame5)
             else:
@@ -163,6 +177,7 @@ def consumer():
             if q6Value[0] is not None:
                 bbox_xyxy6 = q6Value[0][:][:,:4]
                 identities6 = q6Value[0][:][:,4]
+                classes6 = q6Value[0][:][:,5]
                 frame6 = q6Value[0][:][0,7]
                 print('Frame at vid 6:', frame6)
             else:
@@ -170,12 +185,6 @@ def consumer():
                 bbox_xyxy6 = None
                 identities6 = None
 
-
-                """if all(SYNC):
-                    print('All processes executed')
-                    print(q2.qsize())
-                    time.sleep(2)
-                    continue"""
             bbox_list = [bbox_xyxy1 if bbox_xyxy1 is not None else [],
                          bbox_xyxy2 if bbox_xyxy2 is not None else [],
                          bbox_xyxy3 if bbox_xyxy3 is not None else [],
@@ -183,25 +192,34 @@ def consumer():
                          bbox_xyxy5 if bbox_xyxy5 is not None else [],
                          bbox_xyxy6 if bbox_xyxy6 is not None else []]
 
-            intersected_bboxes = iou_bboxes(bbox_list, mapping_objects)
+            cam_id_list = [np.ones(len(bbox_xyxy1 if bbox_xyxy1 is not None else []))[:].tolist() +
+                           (np.ones(len(bbox_xyxy2 if bbox_xyxy2 is not None else []))*2)[:].tolist() +
+                           (np.ones(len(bbox_xyxy3 if bbox_xyxy3 is not None else []))*3)[:].tolist() +
+                           (np.ones(len(bbox_xyxy4 if bbox_xyxy4 is not None else []))*4)[:].tolist() +
+                           (np.ones(len(bbox_xyxy5 if bbox_xyxy5 is not None else []))*5)[:].tolist() +
+                           (np.ones(len(bbox_xyxy6 if bbox_xyxy6 is not None else []))*6)[:].tolist()
+                           ][0]
+
+            classes_list = [classes1.tolist() + classes2.tolist() + classes3.tolist() + classes4.tolist() +
+                            classes5.tolist() + classes6.tolist()][0]
+            print(classes_list)
+            intersected_bboxes = iou_bboxes(bbox_list, mapping_objects, cam_id_list, classes_list)
 
             identities_list = [identities1, identities2, identities3, identities4, identities5, identities6]
             #bbox_list = [bbox_xyxy1]
             #identities_list = [identities1]
             #mapping_objects = [mapObj1]
-            img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list)
-            img2 = draw_bboxes(intersected_bboxes)
+            img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classes1, classes2, classes3, classes4, classes5, classes6])
+            img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
 
             cv2.imshow('overview', img)
-            if all([frame1, frame2, frame3, frame4, frame5, frame6]):
-                label = 'Frame vid1: %d Frame vid2: %d Frane vid3: %d Frame vid4: %d Frame vid 6: %d' % (frame1, frame2, frame3, frame4, frame5, frame6)
-                cv2.putText(img2, label, (0,0), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
             cv2.imshow('Overview intersection', img2)
             calculated_frames.append(i)
             if cv2.waitKey(0) == 33:
                 continue
 
-
+            ret, VIDEOFRAME = CAP.read()
+            VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 if __name__ == '__main__':
     q = queue.Queue()
     q2 = queue.Queue()
@@ -209,6 +227,7 @@ if __name__ == '__main__':
     q4 = queue.Queue()
     q5 = queue.Queue()
     q6 = queue.Queue()
+
 
 
     # Producers
