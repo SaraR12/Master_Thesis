@@ -169,8 +169,7 @@ def detect(opt, device,camera, queue=None, save_img=False):
         # Inference
         t1 = time_synchronized()
         pred = model(img, augment=opt.augment)[0]
-        if pred == []:
-            yield None
+
         # Apply NMS
         pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
 
@@ -188,10 +187,12 @@ def detect(opt, device,camera, queue=None, save_img=False):
             else:
                 p, s, im0 = path, '', im0s
 
+
             save_path = str(Path(out) / Path(p).name)
             txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -246,9 +247,10 @@ def detect(opt, device,camera, queue=None, save_img=False):
                         yield outputs
 
                 else:
+                    yield None
                     mappedImg = PLANAR_MAP
-
-                    
+            else:
+                yield None
                     # Print time (inference + NMS)
             #print('%sDone. (%.3fs)' % (s, t2 - t1))
             #print('FPS=%.2f' % (1/(t3 - t1)))
@@ -295,10 +297,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='CameraWest.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoMSW.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
@@ -319,9 +321,11 @@ if __name__ == '__main__':
     import torch.backends.cudnn as cudnn
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
+    test = []
     with torch.no_grad():
-        detect(args, device)
-
+        out = detect(args, device, 'MSW')
+        for i in out:
+            test.append(i)
 def run(path, camera, queue = None):
     print(path)
     parser = argparse.ArgumentParser()

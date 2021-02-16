@@ -93,7 +93,6 @@ def consumer():
 
     while True:
         i = min(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
-        print(i)
         """itemCamWN = q.get()
         itemCamMSW = q2.get()
         itemCamNS = q3.get()
@@ -106,8 +105,9 @@ def consumer():
         #print(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
         #print(q1List)
         #if (i > 0) and (i not in calculated_frames):
+        frame1, frame2, frame3, frame4, frame5, frame6 = [], [], [], [], [], []
+        print(i)
         if all([q1List,q2List,q3List,q4List,q5List,q6List]):
-
             q1Value = q1List.pop(0)
             if q1Value[0] is not None:
                 bbox_xyxy1 = q1Value[0][:][:,:4]
@@ -140,7 +140,7 @@ def consumer():
                 identities3 = None
 
             q4Value = q4List.pop(0)
-            if q3Value[0] is not None:
+            if q4Value[0] is not None:
                 bbox_xyxy4 = q4Value[0][:][:,:4]
                 identities4 = q4Value[0][:][:,4]
                 frame4 = q4Value[0][:][0,7]
@@ -193,6 +193,9 @@ def consumer():
             img2 = draw_bboxes(intersected_bboxes)
 
             cv2.imshow('overview', img)
+            if all([frame1, frame2, frame3, frame4, frame5, frame6]):
+                label = 'Frame vid1: %d Frame vid2: %d Frane vid3: %d Frame vid4: %d Frame vid 6: %d' % (frame1, frame2, frame3, frame4, frame5, frame6)
+                cv2.putText(img2, label, (0,0), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
             cv2.imshow('Overview intersection', img2)
             calculated_frames.append(i)
             if cv2.waitKey(0) == 33:
