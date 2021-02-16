@@ -59,7 +59,7 @@ def compute_color_for_labels(label):
 
 
 def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0)):
-    pts_src, pts_dst = getKeypoints(camera)
+    pts_src, pts_dst = getKeypoints(str(camera))
     mapperObject = Mapper(PLANAR_MAP, pts_src, pts_dst)
 
     allMappedPoints = []
@@ -94,7 +94,7 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
     return img, mappedImg, allMappedPoints, mapperObject
 
 
-def detect(opt, device,camera, save_img=False):
+def detect(opt, device,camera, queue=None, save_img=False):
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
 
@@ -145,7 +145,7 @@ def detect(opt, device,camera, save_img=False):
         cudnn.benchmark = True  # set True to speed up constant image size inference
         dataset = LoadStreams(source, img_size=imgsz)
     else:
-        save_img = True
+        save_img = False
         dataset = LoadImages(source, img_size=imgsz)
 
     # Get names and colors
@@ -159,6 +159,7 @@ def detect(opt, device,camera, save_img=False):
     frame = 0
     for path, img, im0s, vid_cap in dataset:
         frame += 1
+
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -168,19 +169,20 @@ def detect(opt, device,camera, save_img=False):
         # Inference
         t1 = time_synchronized()
         pred = model(img, augment=opt.augment)[0]
-
+        if pred == []:
+            yield None
         # Apply NMS
         pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+
         t2 = time_synchronized()
 
         # Apply Classifier
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
 
-
         # Process detections
-
         for i, det in enumerate(pred):  # detections per image
+
             if webcam:  # batch_size >= 1
                 p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
             else:
@@ -227,17 +229,21 @@ def detect(opt, device,camera, save_img=False):
                 
                 # draw boxes for visualization
                 if len(outputs) > 0:
-
                     bbox_tlwh = []
                     bbox_xyxy = outputs[:, :4]
                     identities = outputs[:, 4]
                     clses = outputs[:, 5]
                     scores = outputs[:, 6]
                     stays = outputs[:, 7]
+                    outputs[:, 7] = np.ones(outputs.shape[0])*frame
                     im0, mappedImg, mappedPoint, mapperObjects = draw_boxes(im0, bbox_xyxy, [names[i] for i in clses], scores, camera, identities)
 
                     # Send the boundingboxes (and info such as class and id) out from the function
-                    yield outputs
+                    if queue is not None:
+                        queue.put(outputs, block=True)
+                        print('here')
+                    else:
+                        yield outputs
 
                 else:
                     mappedImg = PLANAR_MAP
@@ -248,8 +254,8 @@ def detect(opt, device,camera, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            #if cv2.waitKey(0) == 33:
-            #    continue
+            """if cv2.waitKey(0) == 33:
+                continue"""
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
@@ -285,7 +291,7 @@ def detect(opt, device,camera, save_img=False):
             # test
 
 
-"""if __name__ == '__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
@@ -314,9 +320,9 @@ def detect(opt, device,camera, save_img=False):
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     with torch.no_grad():
-        detect(args, device)"""
+        detect(args, device)
 
-def run(path, camera):
+def run(path, camera, queue = None):
     print(path)
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
@@ -347,9 +353,13 @@ def run(path, camera):
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     with torch.no_grad():
-        out = detect(args, device, camera)
-
-        return out
+        if queue is not None:
+            print('här')
+            out = detect(args, device, camera, queue)
+        else:
+            print('där')
+            out = detect(args, device, camera)
+            return out
 
         """if len(outputs) > 0:
             bbox_xyxy = outputs[:, :4]
