@@ -297,11 +297,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoMSW.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoMW.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
@@ -323,9 +323,10 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'MSW')
+        out = detect(args, device, 'MW')
         for i in out:
             test.append(i)
+
 def run(path, camera, queue = None):
     print(path)
     parser = argparse.ArgumentParser()
