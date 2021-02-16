@@ -15,7 +15,10 @@ def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, offset=(0,0
             y1 += offset[1]
             y2 += offset[1]
 
-            id = int(identities[i]) if identities is not None else 0
+            try:
+                id = int(identities[i]) if identities is not None else 0
+            except:
+                print(id)
             color = compute_color_for_labels(id)
 
             # Mapping to plane
@@ -33,7 +36,7 @@ def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, offset=(0,0
 def draw_bboxes(bboxlist):
     mappedImg = cv2.imread('Mapping/plane.png')
     for bbox in bboxlist:
-        print(bbox)
+        #print(bbox)
         x1 = bbox[0]
         y1 = bbox[1]
         x2 = bbox[2]
@@ -59,7 +62,7 @@ def iou_bboxes(bbox_list, mapObjects_list):
 
             x1, y1 = mapObject.getPoint(p1)
             x2, y2 = mapObject.getPoint(p2)
-            print('x1y1x2y2: ', x1,y1,x2,y2)
+            #print('x1y1x2y2: ', x1,y1,x2,y2)
             bbox_w = abs(x2 - x1)
             bbox_h = abs(y2 - y1)
 
@@ -82,8 +85,8 @@ def iou_bboxes(bbox_list, mapObjects_list):
 
     for bbox in bbox_all_list:
 
-        print('Active bbox: ', bbox)
-        print('deleted_bbox', deleted_bbox)
+        #print('Active bbox: ', bbox)
+        #print('deleted_bbox', deleted_bbox)
        # if [bbox] not in deleted_bbox:
         GO = True
         for box in deleted_bbox:
@@ -93,27 +96,24 @@ def iou_bboxes(bbox_list, mapObjects_list):
         if GO:
             if candidates.shape[0] > 1:
                 candidates = np.delete(candidates, 0, axis=0)
-                print('candidates', candidates)
+                #print('candidates', candidates)
                 intersected_bbox, matched_bbox_index = intersection(bbox, candidates)
-                print('matched_bbox_index', matched_bbox_index)
+                #print('matched_bbox_index', matched_bbox_index)
 
                 if matched_bbox_index is not None:
-                    print('Matched bbox: ', candidates[matched_bbox_index, :])
+                    #print('Matched bbox: ', candidates[matched_bbox_index, :])
                     deleted_bbox.append(candidates[matched_bbox_index, :].tolist())
                     candidates = np.delete(candidates, matched_bbox_index, axis=0)
 
                 matches = np.append(matches, [intersected_bbox], axis=0)
 
-                print('matched bbox = ', intersected_bbox)
+                #print('matched bbox = ', intersected_bbox)
             else: # If no bounding boxes match. Save the current one
                 intersected_bbox = [bbox[0], bbox[1], bbox[0]+bbox[3], bbox[1]+bbox[2]]
-                print('NONE ----->: ', intersected_bbox)
-                if cv2.waitKey(0) == 33:
-                    continue
+                #print('NONE ----->: ', intersected_bbox)
+
 
                 matches = np.append(matches, [intersected_bbox], axis=0)
-        else:
-            print('====================================')
 
     matches = np.delete(matches, (0), axis=0)
 
@@ -179,16 +179,12 @@ def intersection(bbox, candidates):
         index = None
 
     return intersection_bbox, index
+"""list = [[1,2],[3,4]]
+print(list.pop(0))
+print(list)"""
 
-bbox = [204 ,1002  ,30  ,24]
-candidate = [[  77  ,697 ,  58 ,  73],
-[ 490, 1025  , 43  , 71],
- [1702 , 162 ,  57 ,  49],
- [1719 , 568   ,71  , 74],
- [1792  ,502   ,26 , 147],
- [1061  ,412  , 13  , 40],
- [  -4  ,770  , 92   ,88],
- [ -15  ,698  , 82,  117],
- [ 151  ,829 ,  87 , 128],
- [1403  ,445,   84  , 23]]
-print(intersection(bbox, candidate))
+q1 = [[None],[2,1]] #,[None], [np.array([[367, 443, 480, 549,   1,   0,  92,   3],[764, 525, 806, 586,   3,   1,  86,   3],[401, 349, 517, 424,   5,   0,  80,   3]])],
+      #[np.array([[367, 442, 480, 550,   1,   0,  92,   4], [762, 522, 807, 589,   3,   1,  85,   4],[403, 349, 518, 423,   5,   0,  81,   4]])], ]
+
+
+print(all(q1))
