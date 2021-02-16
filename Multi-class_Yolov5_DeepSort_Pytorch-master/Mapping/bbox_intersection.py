@@ -179,12 +179,4 @@ def intersection(bbox, candidates):
         index = None
 
     return intersection_bbox, index
-"""list = [[1,2],[3,4]]
-print(list.pop(0))
-print(list)"""
 
-q1 = [[None],[2,1]] #,[None], [np.array([[367, 443, 480, 549,   1,   0,  92,   3],[764, 525, 806, 586,   3,   1,  86,   3],[401, 349, 517, 424,   5,   0,  80,   3]])],
-      #[np.array([[367, 442, 480, 550,   1,   0,  92,   4], [762, 522, 807, 589,   3,   1,  85,   4],[403, 349, 518, 423,   5,   0,  81,   4]])], ]
-
-
-print(all(q1))
