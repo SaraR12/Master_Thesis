@@ -15,8 +15,7 @@ Jonas Lindberg
 Sara Roth
 """
 
-#from helperFunctions import arrayToInt
-
+from homographies import getKeypoints
 import cv2 as cv
 import numpy as np
 def arrayToInt(p):
@@ -48,6 +47,7 @@ class Mapper:
         mappedPoint = self.getPoint(midpoint)
         mappedImg = cv.circle(self.planarView, mappedPoint, 3, markerColor, 3)
         return mappedImg, mappedPoint
+
     def mapBoundingBoxPoints(self,x1,x2,y1,y2, color):
         p1 = np.array([[x1, y1]], dtype='float32')
         p1 = np.array([p1])
