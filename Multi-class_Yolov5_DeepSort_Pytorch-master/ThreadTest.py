@@ -70,14 +70,12 @@ def trackerCamEN(path):
 
 def consumer():
     PLANE = cv2.imread('Mapping/plane.png')
-    pts_src, pts_dst = getKeypoints('WN')
 
     CAP = cv2.VideoCapture('videos/VideoOrto.mkv')
     ret, VIDEOFRAME = CAP.read()
-    print(VIDEOFRAME.shape)
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
-    print(VIDEOFRAME.shape)
 
+    pts_src, pts_dst = getKeypoints('WN')
     mapObj1 = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("MSW")
@@ -120,10 +118,9 @@ def consumer():
             q1Value = q1List.pop(0)
             if q1Value[0] is not None:
                 bbox_xyxy1 = q1Value[0][:][:,:4]
-                identities1 = q1Value[0][:][:,4]
+                identities1 = np.ones(len(q1Value[0][:][:,4]))
                 classes1 = q1Value[0][:][:,5]
                 frame1 = q1Value[0][:][0,7]
-                print('Frame at vid 1:', frame1)
             else:
                 bbox_xyxy1 = None
                 identities1 = None
@@ -131,10 +128,9 @@ def consumer():
             q2Value = q2List.pop(0)
             if q2Value[0] is not None:
                 bbox_xyxy2 = q2Value[0][:][:,:4]
-                identities2 = q2Value[0][:][:,4]
+                identities2 = np.ones(len(q2Value[0][:][:,4])) * 2
                 classes2 = q2Value[0][:][:,5]
                 frame2 = q2Value[0][:][0,7]
-                print('Frame at vid 2:', frame2)
             else:
                 bbox_xyxy2 = None
                 identities2 = None
@@ -143,10 +139,9 @@ def consumer():
             q3Value = q3List.pop(0)
             if q3Value[0] is not None:
                 bbox_xyxy3 = q3Value[0][:][:,:4]
-                identities3 = q3Value[0][:][:,4]
+                identities3 = np.ones(len(q3Value[0][:][:,4])) * 3
                 classes3 = q3Value[0][:][:,5]
                 frame3 = q3Value[0][:][0,7]
-                print('Frame at vid 3:', frame3)
             else:
                 bbox_xyxy3 = None
                 identities3 = None
@@ -154,10 +149,9 @@ def consumer():
             q4Value = q4List.pop(0)
             if q4Value[0] is not None:
                 bbox_xyxy4 = q4Value[0][:][:,:4]
-                identities4 = q4Value[0][:][:,4]
+                identities4 = np.ones(len(q4Value[0][:][:,4])) * 4
                 classes4 = q4Value[0][:][:,5]
                 frame4 = q4Value[0][:][0,7]
-                print('Frame at vid 4:', frame4)
             else:
                 bbox_xyxy4 = None
                 identities4 = None
@@ -165,10 +159,9 @@ def consumer():
             q5Value = q5List.pop(0)
             if q5Value[0] is not None:
                 bbox_xyxy5 = q5Value[0][:][:,:4]
-                identities5 = q5Value[0][:][:,4]
+                identities5 = np.ones(len(q5Value[0][:][:,4])) * 5
                 classes5 = q5Value[0][:][:,5]
                 frame5 = q5Value[0][:][0,7]
-                print('Frame at vid 5:', frame5)
             else:
                 bbox_xyxy5 = None
                 identities5 = None
@@ -176,10 +169,9 @@ def consumer():
             q6Value = q6List.pop(0)
             if q6Value[0] is not None:
                 bbox_xyxy6 = q6Value[0][:][:,:4]
-                identities6 = q6Value[0][:][:,4]
+                identities6 = np.ones(len(q6Value[0][:][:,4])) * 6
                 classes6 = q6Value[0][:][:,5]
                 frame6 = q6Value[0][:][0,7]
-                print('Frame at vid 6:', frame6)
             else:
                 #print('Thread 6 reporting None')
                 bbox_xyxy6 = None
@@ -202,18 +194,28 @@ def consumer():
 
             classes_list = [classes1.tolist() + classes2.tolist() + classes3.tolist() + classes4.tolist() +
                             classes5.tolist() + classes6.tolist()][0]
-            print(classes_list)
+            #print(classes_list)
             intersected_bboxes = iou_bboxes(bbox_list, mapping_objects, cam_id_list, classes_list)
+            print('compute_iou_matrix',compute_iou_matrix(bbox_list, mapping_objects))
 
-            identities_list = [identities1, identities2, identities3, identities4, identities5, identities6]
+            identities_list = [identities1.tolist() if identities1 is not None else None,
+                               identities2.tolist() if identities2 is not None else None,
+                               identities3.tolist() if identities3 is not None else None,
+                               identities4.tolist() if identities4 is not None else None,
+                               identities5.tolist() if identities5 is not None else None,
+                               identities6.tolist() if identities6 is not None else None]
             #bbox_list = [bbox_xyxy1]
             #identities_list = [identities1]
             #mapping_objects = [mapObj1]
+
             img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classes1, classes2, classes3, classes4, classes5, classes6])
             img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
 
             cv2.imshow('overview', img)
             cv2.imshow('Overview intersection', img2)
+
+            print('Intersection bbox',find_intersections(bbox_list, mapping_objects))
+
             calculated_frames.append(i)
             if cv2.waitKey(0) == 33:
                 continue
