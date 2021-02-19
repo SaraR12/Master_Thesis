@@ -196,7 +196,7 @@ def consumer():
                             classes5.tolist() + classes6.tolist()][0]
             #print(classes_list)
             intersected_bboxes = iou_bboxes(bbox_list, mapping_objects, cam_id_list, classes_list)
-            #print(compute_iou_matrix(bbox_list))
+            print('compute_iou_matrix',compute_iou_matrix(bbox_list, mapping_objects))
 
             identities_list = [identities1.tolist() if identities1 is not None else None,
                                identities2.tolist() if identities2 is not None else None,
@@ -207,11 +207,15 @@ def consumer():
             #bbox_list = [bbox_xyxy1]
             #identities_list = [identities1]
             #mapping_objects = [mapObj1]
+
             img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classes1, classes2, classes3, classes4, classes5, classes6])
             img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
 
             cv2.imshow('overview', img)
             cv2.imshow('Overview intersection', img2)
+
+            print('Intersection bbox',find_intersections(bbox_list, mapping_objects))
+
             calculated_frames.append(i)
             if cv2.waitKey(0) == 33:
                 continue
