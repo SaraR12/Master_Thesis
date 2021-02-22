@@ -45,7 +45,17 @@ def draw_bboxes(bboxlist, mappedImg):
         cv2.rectangle(mappedImg, (x1, y1), (x2, y2), color, 2)
     return mappedImg
 
-
+def draw_bboxesKalman(bboxlist, mappedImg):
+    #mappedImg = cv2.imread('Mapping/plane.png')
+    for bbox in bboxlist:
+        #print(bbox)
+        x1 = bbox[0]
+        y1 = bbox[1]
+        x2 = bbox[2]
+        y2 = bbox[3]
+        color = (166,151,79)
+        cv2.rectangle(mappedImg, (x1, y1), (x2, y2), color, 2)
+    return mappedImg
 
 
 def iou_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
