@@ -1,5 +1,5 @@
 log.txt
-#/object-detection-and-tracking-with-multiple-cameras-master
+/object-detection-and-tracking-with-multiple-cameras-master
 yolov4.weights
 .idea/
 /DeepSORT_YOLOv5_Pytorch-master/
