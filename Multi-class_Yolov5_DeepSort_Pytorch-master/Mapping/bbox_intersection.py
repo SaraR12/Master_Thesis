@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from Mapping.mapper import *
 CLASSES = ['AGV', 'Human']
-CAMERAS = ['','WN', 'MSW', 'NS', 'ME', 'MW', 'EN']
+CAMERAS = ['','WN', 'MSW', 'NS', 'WN2', 'MW', 'EN']
 def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_list, cam_id_list, offset=(0,0)):
     # bbox_list = list with bounding boxes from cameras
     # mapping_objects = Homography from the different cameras
@@ -63,8 +63,8 @@ def iou_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
     # Collect all bboxes
     for (bbox, mapObject, bbox_class, cam_id) in zip(bbox_list, mapObjects_list, classes_list, cam_id_list):
         if bbox != []:
-            for (i, box), camera_id in zip(enumerate(bbox), cam_id):
-                camera_id = int(camera_id)
+            for (i, box), id in zip(enumerate(bbox), cam_id):
+                id = int(id)
                 x1c, y1c, x2c, y2c = [int(i) for i in box]
 
 
@@ -82,12 +82,8 @@ def iou_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
 
                 # Change top left corner and bottom right corner depending on which direction the camera is pointing
                 # to make it correct against the mapped view
-                if camera_id == 2 or camera_id == 5: # Camera MW and MSW
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w, bbox_class]], axis=0)
-                elif camera_id == 3: # Camera NS
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y2, bbox_h, bbox_w, bbox_class]], axis=0)
-                elif camera_id == 4: # Camera ME
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y1, bbox_h, bbox_w, bbox_class]], axis=0)
+                if id == 2 or id == 3: # Camera MSW and NS
+                    bbox_all_list = np.append(bbox_all_list, [[y1, x2, bbox_w, bbox_h, bbox_class]], axis=0)
                 else:
                     bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w, bbox_class]], axis=0)
 
@@ -184,8 +180,8 @@ def intersection(bbox, bbox_cam_ID, bbox_class, candidates, cam_id_list):
 
     return intersection_bbox, index
 
-def compute_iou_matrix(bbox_list, mapObjects_list):
-    bbox_list = bbox_to_coords(bbox_list, mapObjects_list)
+def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
+    bbox_list = bbox_to_coords(bbox_list, mapObjects_list, camera_id_list)
     iou_matrix = np.zeros((len(bbox_list), len(bbox_list)))
 
     for i, bbox in enumerate(bbox_list):
@@ -242,12 +238,13 @@ def compute_color_for_labels(label):
     color = [int((p * (label ** 2 - label + 1)) % 255) for p in palette]
     return tuple(color)
 
-def bbox_to_coords(bbox_list, mapObjects_list):
-    j = 0
+def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
     bbox_all_list = np.array([[1,2,3,4]], dtype='int')
-    for (bbox, mapObject) in zip(bbox_list, mapObjects_list):
+    for (bbox, mapObject, camID) in zip(bbox_list, mapObjects_list, camera_id_list):
         if bbox != []:
-            for i, box in enumerate(bbox):
+            for (i, box), id in zip(enumerate(bbox), camID):
+                id = int(id)
+
                 x1c, y1c, x2c, y2c = [int(i) for i in box]
 
                 p1 = np.array([[x1c, y1c]], dtype='float32')
@@ -264,21 +261,17 @@ def bbox_to_coords(bbox_list, mapObjects_list):
 
                 # Change top left corner and bottom right corner depending on which direction the camera is pointing
                 # to make it correct against the mapped view
-                if j == 4 or j == 1:  # Camera MW and MSW
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w]], axis=0)
-                elif j == 2:  # Camera NS
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y2, bbox_h, bbox_w]], axis=0)
-                elif j == 3:  # Camera ME
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y1, bbox_h, bbox_w]], axis=0)
+                if id == 2 or id == 3:  # Camera MSW and NS
+                    bbox_all_list = np.append(bbox_all_list, [[y1, x2, bbox_w, bbox_h]], axis=0)
                 else:
                     bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w]], axis=0)
-        j += 1
 
     bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
+
     return bbox_all_list
 
-def find_intersections(bbox_list, mapObjects_list, classes_list):
-    iou_matrix = compute_iou_matrix(bbox_list, mapObjects_list)
+def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list):
+    iou_matrix = compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list)
     available_bboxes = [i for i in range(iou_matrix.shape[0])]
     intersecting_bboxes = []
     for index in range(iou_matrix.shape[0]):
@@ -422,14 +415,17 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed):
                 intersected_bboxes.append(bbxi)
                 bboxes_xyah.append(bbx_xyah)
         else:
-            bbx1 = bbox_list[bbox_indexes[0]]
+            try:
+                bbx1 = bbox_list[bbox_indexes[0]]
+            except:
+                print('oj')
             bb1x1 = bbx1[0]
             bb1y1 = bbx1[1]
             bb1x2 = bbx1[0] + bbx1[3]
             bb1y2 = bbx1[1] + bbx1[2]
 
             bbxi = [bb1x1, bb1y1, bb1x2, bb1y2]
-            bbx_xyah = [x_left, y_top, abs(x_left - x_right) / abs(y_top - y_bottom), abs(y_top - y_bottom)]
+            bbx_xyah = [bb1x1, bb1y1, abs(bb1x2 - bb1x1) / abs(bb1y1 - bb1y2), abs(bb1y1 - bb1y2)]
             intersected_bboxes.append(bbxi)
             bboxes_xyah.append(bbx_xyah)
 
@@ -477,13 +473,15 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed):
                     index = i
 
 
+
+# Maps a list of bounding boxes from camera perspective into planar perspective.
 def map_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
     bbox_all_list = np.array([[1,2,3,4,5]], dtype=int)
     # Collect all bboxes
     for (bbox, mapObject, bbox_class, cam_id) in zip(bbox_list, mapObjects_list, classes_list, cam_id_list):
         if bbox != []:
-            for (i, box), camera_id in zip(enumerate(bbox),cam_id):
-                camera_id = int(camera_id)
+            for (i, box), id in zip(enumerate(bbox),cam_id):
+                id = int(id)
                 x1c, y1c, x2c, y2c = [int(i) for i in box]
 
 
@@ -501,49 +499,10 @@ def map_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
 
                 # Change top left corner and bottom right corner depending on which direction the camera is pointing
                 # to make it correct against the mapped view
-                if camera_id == 5 or camera_id == 2: # Camera MW and MSW
+                if id == 2 or id == 3: # Camera MSW    NS
                     bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w, bbox_class]], axis=0)
-                elif camera_id == 3: # Camera NS
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y2, bbox_h, bbox_w, bbox_class]], axis=0)
-                elif camera_id == 4: # Camera ME
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y1, bbox_h, bbox_w, bbox_class]], axis=0)
                 else:
                     bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w, bbox_class]], axis=0)
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
     return bbox_all_list
-"""list = [[1,2],[3,4]]
-print(list.pop(0))
-print(list)"""
-
-iou_matrix =  np.array([[-1,  0      ,     0  ,         0   ,        0         ,  0          , 0         ,  0    , 0.20826      ,     0       ,    0        ,   0     ,      0       ,    0     ,      0],
-                        [0, -1     ,      0        ,   0  ,         0       ,    0          , 0   ,        0      ,     0,
-                         0.16697     ,      0    ,       0   ,        0     ,      0       ,    0],
-                        [0   ,        0 ,-1       ,    0     ,      0      ,     0      ,     0    ,       0     ,      0,
-                         0       ,    0    ,       0    ,       0   ,        0      ,     0],
-                        [0    ,       0         ,  0 ,-1,           0   ,        0        ,   0      ,     0       ,    0,
-                         0      ,     0  ,  0.011692      ,     0    ,       0     ,      0],
-                        [0  ,         0    ,       0,           0 ,-1,     0.11476      ,     0  ,         0       ,    0,
-                         0         ,  0    ,       0  ,   0.16694  ,   0.21495     ,      0],
-                        [0       ,    0         ,  0     ,      0    , 0.11476, -1,           0      ,     0       ,    0,
-                         0         ,  0   ,        0     ,0.24507   ,  0.41431    ,       0],
-                        [0    ,       0  ,         0        ,   0       ,    0     ,      0, -1,           0    ,       0,
-                         0  ,   0.29808   ,        0           ,0      ,     0      ,     0],
-                        [0         ,  0      ,     0   ,        0,           0      ,     0    ,       0, -1,           0,
-                         0     ,      0      ,     0     ,      0    ,       0  ,   0.31299],
-                        [0.20826   ,        0     ,      0      ,     0      ,     0          , 0    ,       0    ,       0, -1,
-                         0     ,      0        ,   0     ,      0      ,     0       ,    0],
-                        [0  ,   0.16697    ,       0 ,          0           ,0    ,       0   ,        0        ,   0,
-                         0, -1,           0     ,      0      ,     0  ,         0  ,         0],
-                        [0   ,        0    ,       0 ,          0  ,         0         ,  0   ,  0.29808  ,         0,
-                         0         ,  0 ,-1,           0         ,  0        ,   0     ,      0],
-                        [0        ,   0    ,       0  ,  0.011692 ,          0        ,   0       ,    0       ,    0,
-                         0        ,   0       ,    0, -1,           0    ,       0     ,      0],
-                        [0     ,      0      ,     0     ,      0,     0.16694  ,   0.24507   ,        0  ,         0,
-                         0    ,       0    ,       0   ,        0, -1,     0.12194     ,      0],
-                        [0    ,       0     ,      0      ,     0   ,  0.21495  ,   0.41431   ,        0     ,      0,
-                         0      ,     0     ,      0     ,      0 ,    0.12194, -1,           0],
-                        [0   ,        0    ,       0      ,     0     ,      0    ,       0    ,       0 ,    0.31299,
-                         0   ,        0         ,  0     ,      0      ,     0          , 0 ,-1]])
-#print(iou_matrix)
-#print(find_intersections(iou_matrix))

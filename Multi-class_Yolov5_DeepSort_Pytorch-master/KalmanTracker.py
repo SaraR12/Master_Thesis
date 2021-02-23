@@ -1,4 +1,22 @@
+import cv2
+
 from deep_sort.deep_sort.sort.kalman_filter import KalmanFilter
+
+def calculateCenterPoint(xyah):  # a = w / h
+    x1, y1, a, h = xyah[0], xyah[1], xyah[2], xyah[3]
+
+    y2 = y1 + h
+    x2 = x1 + a * h
+
+    x = x1 + x2 / 2
+    y = y1 + y2 / 2
+    return (x, y)
+
+def drawFilterOutput(xyah, frame):
+    for bbox in xyah:
+        p = calculateCenterPoint(bbox)
+        cv2.circle(frame, p, 2, (0,0,255), 2)
+    return frame
 
 def InitKalmanTracker(measurement_list):
     filter_list = []

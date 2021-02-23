@@ -157,6 +157,8 @@ def detect(opt, device,camera, queue=None, save_img=False):
     img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
     _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
     frame = 0
+    mappedImg = PLANAR_MAP
+
     for path, img, im0s, vid_cap in dataset:
         frame += 1
 
@@ -256,13 +258,13 @@ def detect(opt, device,camera, queue=None, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            """if cv2.waitKey(0) == 33:
-                continue"""
+            if cv2.waitKey(0) == 33:
+                continue
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
-                #cv2.imshow(p, im0)
-                #cv2.imshow('1',   )
+                cv2.imshow(p, im0)
+                cv2.imshow('1', mappedImg)
 
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
@@ -297,7 +299,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoMSW.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoEN.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
@@ -323,11 +325,10 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'MW')
+        out = detect(args, device, 'EN')
         for i in out:
             test.append(i)
-            print('------------------------')
-            print(i)
+
 
 def run(path, camera, queue = None):
     print(path)
@@ -337,7 +338,7 @@ def run(path, camera, queue = None):
     parser.add_argument('--source', type=str, default=path, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.8, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
