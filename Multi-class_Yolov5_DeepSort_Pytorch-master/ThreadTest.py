@@ -222,6 +222,7 @@ def consumer():
 
             ret, VIDEOFRAME = CAP.read()
             VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
+
 if __name__ == '__main__':
     q = queue.Queue()
     q2 = queue.Queue()
