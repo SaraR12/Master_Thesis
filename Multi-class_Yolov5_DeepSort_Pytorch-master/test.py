@@ -1,31 +1,33 @@
-import matplotlib.pyplot as plt
+from Mapping.mapper import Mapper
+
+import cv2 as cv
 import numpy as np
-import csv
+import matplotlib.pyplot as plt
 
-xscale = 50 / 1788
-yscale = 30 / 1069
+plane = cv.imread('Mapping/plane.png')
+cap = cv.VideoCapture('videos/VideoWN.mkv')
+ret, camera = cap.read()
+ret, camera = cap.read()
 
-xU = [371.0, 370.61022232343646, 370.4883259283365,  370.8256708333796]
+pts_src = np.array([[535,150],[720,823],[1215,385],[1561,756],[1495,209],[1835,609],[1434,56]])
+pts_dst = np.array([[149,484],[335,963],[612,706 ],[752,937 ],[821,565 ],[919,859],[821,404]])
 
-def pxTom(x,y):
-    print('x (m) = ', x * xscale, 'y (m) = ', (1069 - y) * yscale)
 
-xU, yU, xP, yP = [], [], [], []
+x = 1434
+y = 56
+mapper = Mapper(plane, pts_src, pts_dst)
+point = np.array([[x,y]], dtype='float32')
+point = np.array([point])
 
-with open('update.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
-    for row in csv_reader:
-        xU.append(float(row[0]))
-        yU.append(float(row[1]))
-with open('predict.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
-    for row in csv_reader:
-        xP.append(float(row[0]))
-        yP.append(float(row[1]))
+xtilde, ytilde = mapper.getPoint(point)
+print(xtilde, ytilde)
+cv.circle(camera, (x, y), 1, (0, 0, 255), 3)
+cv.circle(plane, (xtilde, ytilde), 1, (0, 0, 255), 3)
 
-plt.plot(np.array(xP), np.array(yP))
-plt.plot(np.array(xU), np.array(yU), 'r')
+fig, (ax1, ax2) = plt.subplots(1, 2)
+fig.suptitle('Mapping test')
+
+ax1.imshow(camera)
+ax2.imshow(plane)
 
 plt.show()

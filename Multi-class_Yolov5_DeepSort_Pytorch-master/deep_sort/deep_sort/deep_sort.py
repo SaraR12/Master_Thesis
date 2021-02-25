@@ -14,7 +14,7 @@ __all__ = ['DeepSort']
 
 
 class DeepSort(object):
-    def __init__(self, model_path, max_dist=0.2, min_confidence=0.3, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
+    def __init__(self, model_path, max_dist=50 , min_confidence=0.3, nms_max_overlap=1.0, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100, use_cuda=True):
         self.min_confidence = min_confidence
         self.nms_max_overlap = nms_max_overlap
 
@@ -80,7 +80,7 @@ class DeepSort(object):
     def _xywh_to_xyxy(self, bbox_xywh):
         x,y,w,h = bbox_xywh
         x1 = max(int(x-w/2),0)
-        x2 = min(int(x+w/2),self.width-1)
+        x2 = min(int(x+w/2), self.width-1)
         y1 = max(int(y-h/2),0)
         y2 = min(int(y+h/2),self.height-1)
         return x1,y1,x2,y2

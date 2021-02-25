@@ -1,23 +1,24 @@
 from mapper import Mapper
-from helperFunctions import *
 
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
 plane = cv.imread('plane.png')
-camera = cv.imread('SE.png')
+cap = cv.VideoCapture('Multi-class_Yolov5_DeepSort_Pytorch-master/videos/VideoWN.mkv')
+ret, camera = cap.read()
 
-pts_src = np.array([[1017,883],[1335,616],[651,611],[533,525],[291,430],[470,477],[1533,492]])
-pts_dst = np.array([[1680,864],[1679,569],[1375,864],[1197,864],[822,941],[1068,864],[1708,270]])
+pts_src = np.array([[535,150],[720,823],[1215,385],[1561,756],[1495,209],[1832,607],[1434,56]])
+pts_dst = np.array([[149,485],[335,963],[612,706],[752,937],[321,565],[919,859],[821,404]])
 
+
+x = 535
+y = 150
 mapper = Mapper(plane, pts_src, pts_dst)
-point = np.array([[237,393]], dtype='float32')
+point = np.array([[535,150]], dtype='float32')
 point = np.array([point])
 
 xtilde, ytilde = mapper.getPoint(point)
-
-x, y = arrayToInt(point)
 
 cv.circle(camera, (x, y), 7, (0, 0, 255), 3)
 cv.circle(plane, (xtilde, ytilde), 7, (0, 0, 255), 3)
