@@ -38,7 +38,7 @@ class KalmanFilter(object):
     """
 
     def __init__(self):
-        ndim, dt = 4, 1.
+        ndim, dt = 4, 1/24
 
         # Create Kalman filter model matrices.
         self._motion_mat = np.eye(2 * ndim, 2 * ndim)
@@ -49,8 +49,8 @@ class KalmanFilter(object):
         # Motion and observation uncertainty are chosen relative to the current
         # state estimate. These weights control the amount of uncertainty in
         # the model. This is a bit hacky.
-        self._std_weight_position = 1.   # 1. / 20
-        self._std_weight_velocity = 1. / 1
+        self._std_weight_position = 1. / 10    # 1. / 20
+        self._std_weight_velocity = 1. / 200   # 1. / 120
 
     def initiate(self, measurement):
         """Create track from unassociated measurement.

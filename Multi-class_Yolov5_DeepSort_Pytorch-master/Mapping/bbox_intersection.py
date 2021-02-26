@@ -3,10 +3,18 @@ import numpy as np
 from Mapping.mapper import *
 CLASSES = ['AGV', 'Human']
 CAMERAS = ['','WN', 'MSW', 'NS', 'M', 'EN', 'ME']
-def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_list, cam_id_list, offset=(0,0)):
+
+
+def areaOfPolygon(p):
+    return 0.5 * abs(sum(x0*y1 - x1*y0
+                         for ((x0, y0), (x1, y1)) in segments(p)))
+def segments(p):
+    return zip(p, p[1:] + [p[0]])
+
+def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_list, cam_id_list, img, offset=(0,0)):
     # bbox_list = list with bounding boxes from cameras
     # mapping_objects = Homography from the different cameras
-    mappedImg = cv2.imread('Mapping/plane.png') #PLANAR_MAP
+    mappedImg = img
     classes_list = [item.tolist() for item in classes_list]
     #print('List in function: ', classes_list)
     j = 0
@@ -21,21 +29,41 @@ def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_lis
             color = compute_color_for_labels(id)
 
             # Mapping to plane
-            x1m, x2m, y1m, y2m, color = mapperObject.mapBoundingBoxPoints(x1, x2, y1, y2, color)
+            pTL = np.array([[x1, y1]], dtype='float32')
+            pTL = np.array([pTL])
+            xTL, yTL = mapperObject.getPoint(pTL)
 
-            cv2.rectangle(mappedImg, (x1m, y1m), (x2m, y2m), color, 2)
+            pTR = np.array([[x2, y1]], dtype='float32')
+            pTR = np.array([pTR])
+            xTR, yTR = mapperObject.getPoint(pTR)
 
-            label = CAMERAS[int(id)] #CLASSES[cls[i]]
+            pBL = np.array([[x1, y2]], dtype='float32')
+            pBL = np.array([pBL])
+            xBL, yBL = mapperObject.getPoint(pBL)
 
+            pBR = np.array([[x2, y2]], dtype='float32')
+            pBR = np.array([pBR])
+            xBR, yBR = mapperObject.getPoint(pBR)
+
+            pts = np.array([[xTL, yTL], [xBL, yBL],[xBR, yBR], [xTR, yTR]],
+                           np.int32)
+
+            pts = pts.reshape((-1, 1, 2))
+
+            cv2.polylines(mappedImg, [pts],
+                          True, color, 2)
+
+            label = str(j) #CLASSES[cls[i]]
+            j += 1
 
             t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
-            cv2.rectangle(mappedImg, (x1m, y1m), (x1m + t_size[0] + 3, y1m + t_size[1] + 4), color, -1)
-            cv2.putText(mappedImg, label, (x1m, y1m + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
+            cv2.rectangle(mappedImg, (xTR, yTR), (xTR + t_size[0] + 3, yTR + t_size[1] + 4), color, -1)
+            cv2.putText(mappedImg, label, (xTR, yTR + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
     return mappedImg
 
-def draw_bboxes(bboxlist, mappedImg, identities):
+def draw_bboxes(bboxlist, mappedImg, identities=None):
     #mappedImg = cv2.imread('Mapping/plane.png')
-    for bbox, id in zip(bboxlist, identities):
+    for bbox in bboxlist:
         #print(bbox)
         x1 = bbox[0]
         y1 = bbox[1]
@@ -43,10 +71,10 @@ def draw_bboxes(bboxlist, mappedImg, identities):
         y2 = bbox[3]
         color = (166,151,79)
         cv2.rectangle(mappedImg, (x1, y1), (x2, y2), color, 2)
-        label = str(id)
+        """label = str(id)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
         cv2.rectangle(mappedImg, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
-        cv2.putText(mappedImg, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
+        cv2.putText(mappedImg, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)"""
     return mappedImg
 
 def draw_bboxesKalman(bboxlist, mappedImg):
@@ -191,19 +219,28 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
     iou_matrix = np.zeros((len(bbox_list), len(bbox_list)))
 
     for i, bbox in enumerate(bbox_list):
-        bb1x1 = bbox[0]
-        bb1y1 = bbox[1]
-        bb1x2 = bbox[0] + bbox[3]
-        bb1y2 = bbox[1] + bbox[2]
+        bb1xTL = bbox[0]
+        bb1yTL = bbox[1]
+        bb1xTR = bbox[2]
+        bb1yTR = bbox[3]
+        bb1xBL = bbox[4]
+        bb1yBL = bbox[5]
+        bb1xBR = bbox[6]
+        bb1yBR = bbox[7]
 
+        areaBbx1 = areaOfPolygon([[bb1xTL, bb1yTL], [bb1xTR, bb1yTR], [bb1xBL, bb1yBL], [bb1xBR, bb1yBR]])
         # determine the coordinates of the intersection rectangle
         iouList = []
         intersection_bbox = []
         for j, candidate in enumerate(bbox_list):
-            bb2x1 = candidate[0]
-            bb2y1 = candidate[1]
-            bb2x2 = candidate[0] + candidate[3]
-            bb2y2 = candidate[1] + candidate[2]
+            bb2xTL = candidate[0]
+            bb2xTL = candidate[1]
+            bb2xTL = candidate[2]
+            bb2xTL = candidate[3]
+            bb2xTL = candidate[4]
+            bb2xTL = candidate[5]
+            bb2xTL = candidate[6]
+            bb2yBR = candidate[7]
 
             x_left = max(bb1x1, bb2x1)
             y_top = max(bb1y1, bb2y1)
@@ -245,7 +282,7 @@ def compute_color_for_labels(label):
     return tuple(color)
 
 def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
-    bbox_all_list = np.array([[1,2,3,4]], dtype='int')
+    bbox_all_list = np.array([[1,2,3,4,5,6,7,8]], dtype='int')
     for (bbox, mapObject, camID) in zip(bbox_list, mapObjects_list, camera_id_list):
         if bbox != []:
             for (i, box), id in zip(enumerate(bbox), camID):
@@ -253,26 +290,26 @@ def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
 
                 x1c, y1c, x2c, y2c = [int(i) for i in box]
 
-                p1 = np.array([[x1c, y1c]], dtype='float32')
-                p2 = np.array([[x2c, y2c]], dtype='float32')
+                pTL = np.array([[x1c,y1c]], dtype='float32')
+                pTL = np.array([pTL])
+                xTL, yTL = mapObject.getPoint(pTL)
 
-                p1 = np.array([p1])
-                p2 = np.array([p2])
+                pTR = np.array([[x2c, y1c]], dtype='float32')
+                pTR = np.array([pTR])
+                xTR, yTR = mapObject.getPoint(pTR)
 
-                x1, y1 = mapObject.getPoint(p1)
-                x2, y2 = mapObject.getPoint(p2)
+                pBL = np.array([[x1c, y2c]], dtype='float32')
+                pBL = np.array([pBL])
+                xBL, yBL = mapObject.getPoint(pBL)
 
-                bbox_w = abs(x2 - x1)
-                bbox_h = abs(y2 - y1)
+                pBR = np.array([[x2c, y2c]], dtype='float32')
+                pBR = np.array([pBR])
+                xBR, yBR = mapObject.getPoint(pBR)
+
 
                 # Change top left corner and bottom right corner depending on which direction the camera is pointing
                 # to make it correct against the mapped view
-                if id == 2 or id == 3:  # Camera MSW and NS
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w]], axis=0)# bbox_all_list = np.append(bbox_all_list, [[y1, x2, bbox_w, bbox_h, bbox_class]], axis=0)
-                elif id == 4 or id == 6:  # Camera M and ME
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y1, bbox_h, bbox_w]], axis=0)
-                else:
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w]], axis=0)
+                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]], axis=0)
 
     bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
 
@@ -451,7 +488,11 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed):
             bb1y2 = bbx1[1] + bbx1[2]
 
             bbxi = [bb1x1, bb1y1, bb1x2, bb1y2]
-            bbx_xyah = [bb1x1, bb1y1, abs(bb1x2 - bb1x1) / abs(bb1y1 - bb1y2), abs(bb1y1 - bb1y2)]
+            try:
+                bbx_xyah = [bb1x1, bb1y1, abs(bb1x2 - bb1x1) / abs(bb1y1 - bb1y2), abs(bb1y1 - bb1y2)]
+            except:
+                print('tjabba')
+                #bbx_xyah = [bb1x1, bb1y1, abs(bb1x2 - bb1x1), abs(bb1y1 - bb1y2)]
             bbox_xywh = [bb1x1, bb1y1, abs(bb1x1 - bb1x2), abs(bb1y1 - bb1y2)]
             intersected_bboxes.append(bbxi)
             bboxes_xyah.append(bbx_xyah)

@@ -1,4 +1,4 @@
-import threading, queue, datetime
+import threading, queue, time
 
 import track
 from Mapping.mapper import *
@@ -198,6 +198,11 @@ def consumer():
 
             classes_list = [classesWN.tolist() + classesMSW.tolist() + classesNS.tolist() +
                             classesM.tolist() + classesEN.tolist() + classesME.tolist()][0]
+            for i, cls in enumerate(classes_list):
+                if cls == 2:
+                    classes_list[i] = 0
+                elif cls == 3:
+                    classes_list[i] = 1
 
             identities_list = [identitiesWN.tolist() if identitiesWN is not None else None,
                                identitiesMSW.tolist() if identitiesMSW is not None else None,
@@ -208,19 +213,16 @@ def consumer():
 
             conf_list = [confWN.tolist() + confMSW.tolist() + confNS.tolist() + confM.tolist() + confEN.tolist() + confME.tolist()][0]
 
-            img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classesWN, classesMSW, classesNS, classesM, classesEN, classesME], cam_id_list)
-
-            if frame == 4:
-                print('here')
+            img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classesWN, classesMSW, classesNS, classesM, classesEN, classesME], cam_id_list, VIDEOFRAME)
             intersecting_bboxes, intersecting_classes_list = find_intersections(bbox_list, mapping_objects, classes_list, cam_id_list)
-
+            print(intersecting_bboxes)
             bbox_all_list = map_bboxes(bbox_list, mapping_objects, cam_id_list, classes_list)
             intersected_bboxes, bbox_xyah, bbox_xywh = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list)
-            print('intersected:bboxes', intersected_bboxes)
 
 
-            # Pass detections to deepsort
-            """xywhs = torch.Tensor(bbox_xywh)
+
+            """# Pass detections to deepsort
+            xywhs = torch.Tensor(bbox_xywh)
             detections = [Detection(bbox_xywh[i], 1, [], cls) for i, cls in enumerate(intersecting_classes_list)]
             tracker.predict()
             tracker.update(detections)
@@ -247,6 +249,7 @@ def consumer():
                 print(identities  )
                 img2 = draw_bboxes(bbox_xyxy, VIDEOFRAME, identities)
                 cv2.imshow('Overview intersection', img2)"""
+            """
             xywhs = torch.Tensor(bbox_xywh)
             confss = torch.Tensor(np.ones(len(xywhs)))
             clses = torch.Tensor(intersecting_classes_list)
@@ -255,30 +258,32 @@ def consumer():
             if len(outputs) > 0:
                 outputs = np.stack(outputs, axis=0)
                 print(outputs.shape)
-                bbox_xyxy = outputs[:, :4]
+                 bbox_xyxy = outputs[:, :4]
                 identities = outputs[:, 4]
                 print(identities)
                 img2 = draw_bboxes(bbox_xyxy, VIDEOFRAME, identities)
-                cv2.imshow('Overview intersection', img2)
+                cv2.imshow('Overview intersection', img2)"""
             #t3 = time_synchronized()
+            if False:
+                img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
+                #################################### KALMAN FILTERING ######################################################
+
+                if frame == 3:
+                    filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
+                    #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
+                elif frame > 3:
+                    print(frame)
+                    filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
+                    bbox_xyah = association(filter_list, mean_list, covariance_list, bbox_xyah)
+                    #mean_list, covariance_list = projectKalmanTracker(filter_list, mean_list, covariance_list)
+                    filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
+
+                    # Draw filter outputs
+                    drawFilterOutput(mean_list, img2)
 
 
-
-
-            #################################### KALMAN FILTERING ######################################################
-            """if frame == 3:
-                filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
-                filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
-            elif frame > 3:
-                bbox_xyah = association(filter_list, mean_list, covariance_list, bbox_xyah)
-                filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
-
-                # Draw filter outputs
-                drawFilterOutput(mean_list, img2)
-
-                filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
-            """
-            ######################################## SHOW RESULTS ######################################################
+                    cv2.imshow('Overview intersection', img2)
+                ######################################## SHOW RESULTS ######################################################
             cv2.imshow('overview', img)
 
 

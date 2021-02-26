@@ -71,23 +71,56 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
         x2 += offset[0]
         y1 += offset[1]
         y2 += offset[1]
+
+
         # box text and bar
         id = int(identities[i]) if identities is not None else 0    
         color = compute_color_for_labels(id)
         label = '%d %s %d' % (id, cls_names[i], scores[i])
         label += '%'
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2 , 2)[0]
-        cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
+        #cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
+
+
+
+        cv2.circle(img, (x1, y1), 3, (255, 0, 0), 3)
+
+        #cv2.circle(img, (x2, y1), 3, (0, 0, 255), 3)
+        #cv2.circle(img, (x1, y2), 3, (0, 255, 0), 3)
+        cv2.circle(img, (x2, y2), 3, (255, 255, 255), 3)
+
         cv2.rectangle(img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-
         # Mapping to plane
         x1m, x2m, y1m, y2m, color = mapperObject.mapBoundingBoxPoints(x1,x2,y1,y2, color)
-        cv2.line(mappedImg, (x1m, y1m), (x1m, y2m), color, 2) # left line
-        cv2.line(mappedImg, (x2m, y1m), (x2m, y2m), color, 2) # right line
-        cv2.line(mappedImg, (x1m, y1m), (x2m, y1m), color, 2) # top line
-        cv2.line(mappedImg, (x1m, y2m), (x2m, y2m), color, 2) # bottom line
-        #cv2.rectangle(mappedImg, (x1m, y1m), (x2m, y2m), color, 1)
+
+
+        pTL = np.array([[x1,y1]], dtype='float32')
+        pTL = np.array([pTL])
+        xTL, yTL = mapperObject.getPoint(pTL)
+
+        pTR = np.array([[x2, y1]], dtype='float32')
+        pTR = np.array([pTR])
+        xTR, yTR = mapperObject.getPoint(pTR)
+
+        pBL = np.array([[x1, y2]], dtype='float32')
+        pBL = np.array([pBL])
+        xBL, yBL = mapperObject.getPoint(pBL)
+
+        pBR = np.array([[x2, y2]], dtype='float32')
+        pBR = np.array([pBR])
+        xBR, yBR = mapperObject.getPoint(pBR)
+
+        cv2.line(mappedImg, (xTL, yTL), (xTR, yTR), color, 2) # left line
+        cv2.line(mappedImg, (xTR, yTR), (xBR, yBR), color, 2) # right line
+        cv2.line(mappedImg, (xBR, yBR), (xBL, yBL), color, 2) # top line
+        cv2.line(mappedImg, (xBL, yBL), (xTL, yTL), color, 2) # bottom line
+        """cv2.circle(mappedImg, (x1m, y1m), 3, (255, 0, 0), 3)
+        cv2.circle(mappedImg, (x1m, y2m), 3, (0, 0, 255), 3)
+        cv2.circle(mappedImg, (x2m, y1m), 3, (0, 255, 0), 3)
+        cv2.circle(mappedImg, (x2m, y2m), 3, (255, 255, 255), 3)"""
+
+
         #allMappedPoints.append(mappedPoint)
 
 

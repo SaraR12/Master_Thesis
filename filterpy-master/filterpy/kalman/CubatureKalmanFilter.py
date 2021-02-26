@@ -279,7 +279,7 @@ class CubatureKalmanFilter(object):
         # Only computed only if requested via property
         self._log_likelihood = log(sys.float_info.min)
         self._likelihood = sys.float_info.min
-        self._mahalanobis = None
+        self._mahalanobis = 0
 
         # these will always be a copy of x,P after predict() is called
         self.x_prior = self.x.copy()

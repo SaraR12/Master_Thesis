@@ -43,9 +43,19 @@ class Mapper:
         midpoint = np.array([[midx,midy]], dtype='float32')
         midpoint = np.array([midpoint])
 
+        p1 = np.array([[x1,y1]], dtype='float32')
+        p2 = np.array([[x2, y2]], dtype='float32')
+
+        p1 = np.array([p1])
+        p2 = np.array([p2])
+
+        x1m, y1m = self.getPoint(p1)
+        x2m, y2m = self.getPoint(p2)
+
 
         mappedPoint = self.getPoint(midpoint)
-        mappedImg = cv.circle(self.planarView, mappedPoint, 3, markerColor, 3)
+        #mappedImg = cv.circle(self.planarView, mappedPoint, 3, markerColor, 3)
+        mappedImg = cv.rectangle(self.planarView, (x1m, y1m), (x2m, y2m), (0,0,255),2)
         return mappedImg, mappedPoint
 
     def mapBoundingBoxPoints(self,x1,x2,y1,y2, color):

@@ -99,6 +99,7 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
 
 
 def detect(opt, device,camera, queue=None, save_img=False):
+
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
 
@@ -165,6 +166,8 @@ def detect(opt, device,camera, queue=None, save_img=False):
 
     for path, img, im0s, vid_cap in dataset:
         frame += 1
+        pts_src, pts_dst = getKeypoints(camera)
+        mapper = Mapper(PLANAR_MAP, pts_src, pts_dst)
 
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -232,7 +235,7 @@ def detect(opt, device,camera, queue=None, save_img=False):
                     #print('confs', confs)
                     #out = np.append([x1, y1, x2, y2, 1, int(cls.item()), int(conf.item()*100)],axis=0)
                     out_YOLO = np.append(out_YOLO,[[x1, y1, x2, y2, 1, int(cls.item()), int(conf.item()*100)]],axis=0)
-
+                    mappedImg, _ = mapper.mapFromBoundingBox(x1, y1, x2, y2, (0,0,255))
 
                     if True: #save_img or view_img:  # Add bbox to image
                         label = '%s %.2f' % (names[int(cls)], conf)
@@ -322,7 +325,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoMSW.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoM.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
@@ -348,7 +351,7 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'MSW')
+        out = detect(args, device, 'M')
         for i in out:
             test.append(i)
 
