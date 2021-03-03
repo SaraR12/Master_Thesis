@@ -20,16 +20,31 @@ def hx(x):
     return np.array([[x[0], x[1]]])
 
 
+def preprocessMeasurements(measurement_list):
+    output_measurement = []  # xyah
+
+    for measurement in measurement_list:
+        cls = measurement.pop(-1)
+        center = measurement.pop(-1)
+        if cls == 0:
+            output_measurement.append([center[0] - 25, center[1] - 25, 1, 50])
+        elif cls == 1:
+            output_measurement.append([center[0] - 15, center[1] - 15, 1, 30])
+
+    return output_measurement
 
 def calculateCenterPoint(xyah):  # a = w / h
-    x1, y1, a, h = xyah[0], xyah[1], xyah[2], xyah[3]
+    if xyah != []:
+        x1, y1, a, h = xyah[0], xyah[1], xyah[2], xyah[3]
 
-    y2 = y1 + h
-    x2 = x1 + a * h
+        y2 = y1 + h
+        x2 = x1 + a * h
 
-    x = round((x1 + x2) / 2)
-    y = round((y1 + y2) / 2)
-    return (int(x), int(y))
+        x = round((x1 + x2) / 2)
+        y = round((y1 + y2) / 2)
+        return (int(x), int(y))
+    else:
+        return []
 
 def drawFilterOutput(xyah, frame):
     for i, bbox in enumerate(xyah):
@@ -108,7 +123,7 @@ def association(filter_list, mean_list, cov_list, measurement_list):
         distance = euclidean(mean, measurement_list)
         association_index = np.argmin(distance)
 
-        if distance[association_index] < 65:  # 8:
+        if distance[association_index] < 65:  # 65
             associated_measurement_list.append(measurement_list[association_index])
         else:
             associated_measurement_list.append([])

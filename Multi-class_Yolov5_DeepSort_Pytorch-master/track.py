@@ -333,7 +333,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoMSW.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoME.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
@@ -359,7 +359,7 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'MSW')
+        out = detect(args, device, 'ME')
         for i in out:
             test.append(i)
 

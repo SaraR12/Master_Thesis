@@ -26,7 +26,7 @@ def arrayToInt(p):
 class Mapper:
     def __init__(self, planarview, pts_src, pts_dst):
         self.planarView = planarview
-        self.H, _ = cv.findHomography(pts_src,pts_dst)
+        self.H, _ = cv.findHomography(pts_src,pts_dst, cv.RANSAC, 5.0)
 
     def getPoint(self, point):
         p = cv.perspectiveTransform(point, self.H)
