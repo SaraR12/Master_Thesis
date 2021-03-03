@@ -5,15 +5,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plane = cv.imread('Mapping/plane.png')
-cap = cv.VideoCapture('videos/VideoM.mkv')
+cap = cv.VideoCapture('videos/VideoMW.mkv')
 ret, camera = cap.read()
 ret, camera = cap.read()
 
-pts_src = np.array([[557,738],[1548,405],[1037,113],[1321,14],[618,57],[425,521],[524,278]])
-pts_dst = np.array([[146,488],[332,966],[608,709],[748,941],[683,399],[257,396],[433,396]])
+pts_src = np.array([[1455,240],[126,276],[865,557],[859,264],[1705,554],[869,964],[1107,557]])
+pts_dst = np.array([[1309,400],[564,397],[997,564],[997,403],[1304,564],[997,786],[1127,564]])
 
-x = 512
-y = 723
+x = 1455
+y = 240
 mapper = Mapper(plane, pts_src, pts_dst)
 point = np.array([[x,y]], dtype='float32')
 point = np.array([point])
