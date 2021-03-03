@@ -1,72 +1,81 @@
 import threading, queue
-import cv2
-import time
 
-import track
-from triangulation import triangulate, meterToPixel, euclideanDistance
-from Mapping.mapper import *
 from Mapping.bbox_intersection import *
 from homographies import *
+from KalmanTracker import *
+import trackNoDeepSort
+#from deep_sort.deep_sort.sort.tracker import *
 
-cameraPosWest = meterToPixel(-10.437, 8.9146)
-cameraPosMiddle = meterToPixel(24.168, 17.781)
+qWNList = []
+qMSWList = []
+qNSList = []
+qMList = []
+qENList = []
+qMEList = []
+qWN2List = []
+#qMWList = []
+
+def tlwh_to_xyxy(bbox_tlwh):
+    """
+    TODO:
+        Convert bbox from xtl_ytl_w_h to xc_yc_w_h
+    Thanks JieChen91@github.com for reporting this bug!
+    """
+    x, y, w, h = bbox_tlwh
+    x1 = int(round(x))
+    x2 = x1 + int(round(w))
+    y1 = int(round(y))
+    y2 = y1 + int(round(h))
+    return x1, y1, x2, y2
 
 
-q1List = []
-q2List = []
-q3List = []
-q4List = []
-q5List = []
-q6List = []
-
-def runTracker(path, camera, queue=None):
-    camera = 'WN'
-    out = track.run(path, camera,queue)
-    for i in out:
-        q1List.append(i)
-    print(q1List)
 def trackerCamWN(path):
     camera = 'WN'
-    out = track.run(path, camera)
+    out = trackNoDeepSort.run(path, camera)
     for i in out:
-        q1List.append([i])
-    #q.put(track.run(path, camera), block=True)
+        qWNList.append([i])
 
 def trackerCamMSW(path):
     camera = 'MSW'
-    out = track.run(path, camera)
+    out = trackNoDeepSort.run(path, camera)
     for i in out:
-        q2List.append([i])
-    #q2.put(track.run(path, camera), block=True)
+        qMSWList.append([i])
 
 def trackerCamNS(path):
     camera = 'NS'
-    out = track.run(path, camera)
+    out = trackNoDeepSort.run(path, camera)
     for i in out:
-        q3List.append([i])
-    #q3.put(track.run(path, camera), block=True)
+        qNSList.append([i])
 
-def trackerCamME(path):
-    camera = 'ME'
-    out = track.run(path, camera)
-    for i in out:
-        q4List.append([i])
-    #q4.put(track.run(path, camera), block=True)
-
-def trackerCamMW(path):
+def trackerCamM(path):
     camera = 'MW'
-    out = track.run(path, camera)
+    out = trackNoDeepSort.run(path, camera)
     for i in out:
-        q5List.append([i])
-    #q5.put(track.run(path, camera), block=True)
+        qMList.append([i])
 
 def trackerCamEN(path):
     camera = 'EN'
-    out = track.run(path, camera)
+    out = trackNoDeepSort.run(path, camera)
     for i in out:
-        q6List.append([i])
-    #q6.put(track.run(path, camera), block=True)
+        qENList.append([i])
 
+def trackerCamME(path):
+    camera = 'ME'
+    out = trackNoDeepSort.run(path, camera)
+    for i in out:
+        qMEList.append([i])
+
+def trackerCamWN2(path):
+    camera = 'WN2'
+    out = trackNoDeepSort.run(path, camera)
+    for i in out:
+        qWN2List.append([i])
+
+'''def trackerCamMW(path):
+    camera = 'MW'
+    out = trackNoDeepSort.run(path, camera)
+    for i in out:
+        qMWList.append([i])'''
 
 def consumer():
     PLANE = cv2.imread('Mapping/plane.png')
@@ -76,176 +85,253 @@ def consumer():
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 
     pts_src, pts_dst = getKeypoints('WN')
-    mapObj1 = Mapper(PLANE, pts_src, pts_dst)
+    mapObjWN = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("MSW")
-    mapObj2 = Mapper(PLANE, pts_src, pts_dst)
+    mapObjMSW = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("NS")
-    mapObj3 = Mapper(PLANE, pts_src, pts_dst)
+    mapObjNS = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("ME")
-    mapObj4 = Mapper(PLANE, pts_src, pts_dst)
-
-    pts_src, pts_dst = getKeypoints("MW")
-    mapObj5 = Mapper(PLANE, pts_src, pts_dst)
+    pts_src, pts_dst = getKeypoints("M")
+    mapObjM = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("EN")
-    mapObj6 = Mapper(PLANE, pts_src, pts_dst)
+    mapObjEN = Mapper(PLANE, pts_src, pts_dst)
 
-    mapping_objects = [mapObj1, mapObj2, mapObj3, mapObj4, mapObj5, mapObj6]
+    pts_src, pts_dst = getKeypoints('ME')
+    mapObjME = Mapper(PLANE, pts_src, pts_dst)
+
+    pts_src, pts_dst = getKeypoints('MW')
+    mapObjWN2 = Mapper(PLANE, pts_src, pts_dst)
+
+    '''pts_src, pts_dst = getKeypoints('MW')
+    mapObjMW = Mapper(PLANE, pts_src, pts_dst)'''
+
+    mapping_objects = [mapObjWN, mapObjMSW, mapObjNS, mapObjM, mapObjEN, mapObjME, mapObjWN2] #, mapObjMW]
 
     calculated_frames = []
+    output1 = []
+    outputFiltered1 = []
     i = 0
+    frame = 1
+    plt.show()
+
     while i < 300:
-        i = min(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
-        """itemCamWN = q.get()
-        itemCamMSW = q2.get()
-        itemCamNS = q3.get()
-        itemCamME = q4.get()
-        itemCamMW = q5.get()
-        itemCamEN = q6.get()
-        print('qsize ', q.qsize())
-        
-        print('here')"""
-        #print(len(q1List), len(q2List), len(q3List), len(q4List), len(q5List), len(q6List))
-        #print(q1List)
-        #if (i > 0) and (i not in calculated_frames):
-        classes1, classes2, classes3, classes4, classes5, classes6 = np.array([]), np.array([]), np.array([]),\
-                                                                     np.array([]), np.array([]), np.array([])
-        #print(i)
-        if all([q1List,q2List,q3List,q4List,q5List,q6List]):
-            q1Value = q1List.pop(0)
-            if q1Value[0] is not None:
-                bbox_xyxy1 = q1Value[0][:][:,:4]
-                identities1 = np.ones(len(q1Value[0][:][:,4]))
-                classes1 = q1Value[0][:][:,5]
-                frame1 = q1Value[0][:][0,7]
-            else:
-                bbox_xyxy1 = None
-                identities1 = None
+        #
+        lenWN = len(qWNList)
+        lenMSW = len(qMSWList)
+        lenNS = len(qNSList)
+        lenM = len(qMList)
+        lenEN = len(qENList)
+        lenME = len(qMEList)
+        lenWN2 = len(qWN2List)
+        #lenMW = len(qMWList)
+        i = min(lenWN, lenMSW, lenNS, lenM, lenEN, lenME, lenWN2)  # , lenMW
+        if i > 0:
+            classesWN, classesMSW, classesNS, classesM, classesEN, classesME, classesWN2 = np.array([]), np.array([]), \
+                                                                                            np.array([]),np.array([]), np.array([]), np.array([]), np.array([])
+            confWN, confMSW, confNS, confM, confEN, confME, confWN2 = np.array([]), np.array([]), \
+                                                                                            np.array([]),np.array([]), np.array([]), np.array([]), np.array([])
+            #qWNList,
+            if all([qMSWList,qNSList,qMList,qENList, qMEList, qWN2List]):
+                qWNValue = qWNList.pop(0)
+                if qWNValue[0] is not None:
+                    bbox_xyxyWN = qWNValue[0][:][:,:4]
+                    identitiesWN = np.ones(len(qWNValue[0][:][:,4]))
+                    classesWN = qWNValue[0][:][:,5]
+                    confWN = qWNValue[0][:][:,6]
+                else:
+                    bbox_xyxyWN = None
+                    identitiesWN = None
 
-            q2Value = q2List.pop(0)
-            if q2Value[0] is not None:
-                bbox_xyxy2 = q2Value[0][:][:,:4]
-                identities2 = np.ones(len(q2Value[0][:][:,4])) * 2
-                classes2 = q2Value[0][:][:,5]
-                frame2 = q2Value[0][:][0,7]
-            else:
-                bbox_xyxy2 = None
-                identities2 = None
-                #print('Thread 2 reporting None')
+                qMSWValue = qMSWList.pop(0)
+                if qMSWValue[0] is not None:
+                    bbox_xyxyMSW = qMSWValue[0][:][:,:4]
+                    identitiesMSW = np.ones(len(qMSWValue[0][:][:,4])) * 2
+                    classesMSW = qMSWValue[0][:][:,5]
+                    confMSW = qMSWValue[0][:][:,6]
 
-            q3Value = q3List.pop(0)
-            if q3Value[0] is not None:
-                bbox_xyxy3 = q3Value[0][:][:,:4]
-                identities3 = np.ones(len(q3Value[0][:][:,4])) * 3
-                classes3 = q3Value[0][:][:,5]
-                frame3 = q3Value[0][:][0,7]
-            else:
-                bbox_xyxy3 = None
-                identities3 = None
+                else:
+                    bbox_xyxyMSW = None
+                    identitiesMSW = None
 
-            q4Value = q4List.pop(0)
-            if q4Value[0] is not None:
-                bbox_xyxy4 = q4Value[0][:][:,:4]
-                identities4 = np.ones(len(q4Value[0][:][:,4])) * 4
-                classes4 = q4Value[0][:][:,5]
-                frame4 = q4Value[0][:][0,7]
-            else:
-                bbox_xyxy4 = None
-                identities4 = None
+                qNSValue = qNSList.pop(0)
+                if qNSValue[0] is not None:
+                    bbox_xyxyNS = qNSValue[0][:][:,:4]
+                    identitiesNS = np.ones(len(qNSValue[0][:][:,4])) * 3
+                    classesNS = qNSValue[0][:][:,5]
+                    confNS = qNSValue[0][:][:,6]
+                else:
+                    bbox_xyxyNS = None
+                    identitiesNS = None
 
-            q5Value = q5List.pop(0)
-            if q5Value[0] is not None:
-                bbox_xyxy5 = q5Value[0][:][:,:4]
-                identities5 = np.ones(len(q5Value[0][:][:,4])) * 5
-                classes5 = q5Value[0][:][:,5]
-                frame5 = q5Value[0][:][0,7]
-            else:
-                bbox_xyxy5 = None
-                identities5 = None
+                qMValue = qMList.pop(0)
+                if qMValue[0] is not None:
+                    bbox_xyxyM = qMValue[0][:][:,:4]
+                    identitiesM = np.ones(len(qMValue[0][:][:,4])) * 4
+                    classesM = qMValue[0][:][:,5]
+                    confM = qMValue[0][:][:,6]
+                else:
+                    bbox_xyxyM = None
+                    identitiesM = None
 
-            q6Value = q6List.pop(0)
-            if q6Value[0] is not None:
-                bbox_xyxy6 = q6Value[0][:][:,:4]
-                identities6 = np.ones(len(q6Value[0][:][:,4])) * 6
-                classes6 = q6Value[0][:][:,5]
-                frame6 = q6Value[0][:][0,7]
-            else:
-                #print('Thread 6 reporting None')
-                bbox_xyxy6 = None
-                identities6 = None
+                qENValue = qENList.pop(0)
+                if qENValue[0] is not None:
+                    bbox_xyxyEN = qENValue[0][:][:,:4]
+                    identitiesEN = np.ones(len(qENValue[0][:][:,4])) * 5
+                    classesEN = qENValue[0][:][:,5]
+                    confEN = qENValue[0][:][:,6]
+                else:
+                    bbox_xyxyEN = None
+                    identitiesEN = None
 
-            bbox_list = [bbox_xyxy1 if bbox_xyxy1 is not None else [],
-                         bbox_xyxy2 if bbox_xyxy2 is not None else [],
-                         bbox_xyxy3 if bbox_xyxy3 is not None else [],
-                         bbox_xyxy4 if bbox_xyxy4 is not None else [],
-                         bbox_xyxy5 if bbox_xyxy5 is not None else [],
-                         bbox_xyxy6 if bbox_xyxy6 is not None else []]
+                qMEValue = qMEList.pop(0)
+                if qMEValue[0] is not None:
+                    bbox_xyxyME = qMEValue[0][:][:,:4]
+                    identitiesME = np.ones(len(qMEValue[0][:][:,4])) * 6
+                    classesME = qMEValue[0][:][:,5]
+                    confME = qMEValue[0][:][:,6]
+                else:
+                    bbox_xyxyME = None
+                    identitiesME = None
 
-            cam_id_list = [np.ones(len(bbox_xyxy1 if bbox_xyxy1 is not None else []))[:].tolist() +
-                           (np.ones(len(bbox_xyxy2 if bbox_xyxy2 is not None else []))*2)[:].tolist() +
-                           (np.ones(len(bbox_xyxy3 if bbox_xyxy3 is not None else []))*3)[:].tolist() +
-                           (np.ones(len(bbox_xyxy4 if bbox_xyxy4 is not None else []))*4)[:].tolist() +
-                           (np.ones(len(bbox_xyxy5 if bbox_xyxy5 is not None else []))*5)[:].tolist() +
-                           (np.ones(len(bbox_xyxy6 if bbox_xyxy6 is not None else []))*6)[:].tolist()
-                           ][0]
+                qWN2Value = qWN2List.pop(0)
+                if qWN2Value[0] is not None:
+                    bbox_xyxyWN2 = qWN2Value[0][:][:, :4]
+                    identitiesWN2 = np.ones(len(qWN2Value[0][:][:, 4])) * 7
+                    classesWN2 = qWN2Value[0][:][:, 5]
+                    confWN2 = qWN2Value[0][:][:, 6]
+                else:
+                    bbox_xyxyWN2 = None
+                    identitiesWN2 = None
 
-            classes_list = [classes1.tolist() + classes2.tolist() + classes3.tolist() + classes4.tolist() +
-                            classes5.tolist() + classes6.tolist()][0]
-            #print(classes_list)
-            intersected_bboxes = iou_bboxes(bbox_list, mapping_objects, cam_id_list, classes_list)
-            print('compute_iou_matrix',compute_iou_matrix(bbox_list, mapping_objects))
+                '''qMWValue = qMWList.pop(0)
+                if qMWValue[0] is not None:
+                    bbox_xyxyMW = qMWValue[0][:][:, :4]
+                    identitiesMW = np.ones(len(qMWValue[0][:][:, 4])) * 8
+                    classesMW = qMWValue[0][:][:, 5]
+                    confMW = qMWValue[0][:][:, 6]
 
-            identities_list = [identities1.tolist() if identities1 is not None else None,
-                               identities2.tolist() if identities2 is not None else None,
-                               identities3.tolist() if identities3 is not None else None,
-                               identities4.tolist() if identities4 is not None else None,
-                               identities5.tolist() if identities5 is not None else None,
-                               identities6.tolist() if identities6 is not None else None]
-            #bbox_list = [bbox_xyxy1]
-            #identities_list = [identities1]
-            #mapping_objects = [mapObj1]
+                else:
+                    bbox_xyxyMW = None
+                    identitiesMW = None'''
 
-            img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list, [classes1, classes2, classes3, classes4, classes5, classes6])
-            img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
 
-            cv2.imshow('overview', img)
-            cv2.imshow('Overview intersection', img2)
+                bbox_list = [bbox_xyxyWN if bbox_xyxyWN is not None else [],
+                             bbox_xyxyMSW if bbox_xyxyMSW is not None else [],
+                             bbox_xyxyNS if bbox_xyxyNS is not None else [],
+                             bbox_xyxyM if bbox_xyxyM is not None else [],
+                             bbox_xyxyEN if bbox_xyxyEN is not None else [],
+                             bbox_xyxyME if bbox_xyxyME is not None else [],
+                             bbox_xyxyWN2 if bbox_xyxyWN2 is not None else []]
+                             #bbox_xyxyMW if bbox_xyxyMW is not None else []]
 
-            print('Intersection bbox',find_intersections(bbox_list, mapping_objects))
+                cam_id_list = [[np.ones(len(bbox_xyxyWN if bbox_xyxyWN is not None else []))[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyMSW if bbox_xyxyMSW is not None else []))*2)[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyNS if bbox_xyxyNS is not None else []))*3)[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyM if bbox_xyxyM is not None else []))*4)[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyEN if bbox_xyxyEN is not None else []))*5)[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyME if bbox_xyxyME is not None else []))*6)[:].tolist()] +
+                               [(np.ones(len(bbox_xyxyWN2 if bbox_xyxyWN2 is not None else []))*7)[:].tolist()]][0]
+                               #[(np.ones(len(bbox_xyxyMW if bbox_xyxyMW is not None else []))*8)[:].tolist()]][0]
 
-            calculated_frames.append(i)
-            if cv2.waitKey(0) == 33:
-                continue
+                classes_list = [classesWN.tolist() + classesMSW.tolist() + classesNS.tolist() +
+                                classesM.tolist() + classesEN.tolist() + classesME.tolist() + classesWN2.tolist()][0] #+ classesMW.tolist()]
 
-            ret, VIDEOFRAME = CAP.read()
-            VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
+                for i, cls in enumerate(classes_list):
+                    if cls == 2:
+                        classes_list[i] = 0
+                    elif cls == 3:
+                        classes_list[i] = 1
+
+                identities_list = [identitiesWN.tolist() if identitiesWN is not None else None,
+                                   identitiesMSW.tolist() if identitiesMSW is not None else None,
+                                   identitiesNS.tolist() if identitiesNS is not None else None,
+                                   identitiesM.tolist() if identitiesM is not None else None,
+                                   identitiesEN.tolist() if identitiesEN is not None else None,
+                                   identitiesME.tolist() if identitiesME is not None else None,
+                                   identitiesWN2.tolist() if identitiesWN2 is not None else None]
+                                   #identitiesMW.tolist() if identitiesMW is not None else None]
+
+                """conf_list = [confWN.tolist() + confMSW.tolist() + confNS.tolist() + confM.tolist() + confEN.tolist() + 
+                             confME.tolist() + confWN2.tolist() + confMW.tolist()][0]"""
+                VIDEOFRAME2 = np.copy(VIDEOFRAME)
+
+                img = draw_multiple_boxes(bbox_list, mapping_objects, identities_list,
+                                          [classesWN, classesMSW, classesNS, classesM, classesEN, classesME, classesWN2], cam_id_list, VIDEOFRAME2)
+
+                intersecting_bboxes, intersecting_classes_list = find_intersections(bbox_list, mapping_objects, classes_list, cam_id_list)
+
+                bbox_all_list = map_bboxes(bbox_list, mapping_objects, classes_list)
+
+                intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
+
+                img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
+
+                #t3 = time_synchronized()
+                KF = True
+
+                if KF:
+
+                    #################################### KALMAN FILTERING ######################################################
+
+                    if frame == 4:
+                        output1.append(measurements[0][-2])
+                        bbox_xyah = preprocessMeasurements(measurements)
+                        filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
+                    elif frame > 4:
+
+                        bbox_xyah = preprocessMeasurements(measurements)
+
+                        filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
+
+                        bbox_xyah = association(filter_list, mean_list, covariance_list, bbox_xyah)
+
+                        output1.append(calculateCenterPoint(bbox_xyah[0]))
+
+                        filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
+
+                        outputFiltered1.append(calculateCenterPoint(mean_list[0]))
+
+                        # Draw filter outputs
+                        drawFilterOutput(mean_list, img2)
+
+                    ######################################## SHOW RESULTS ######################################################
+                print('Frame: ', frame)
+                cv2.imshow('overview', img)
+                cv2.imshow('Intersected', img2)
+
+
+                calculated_frames.append(i)
+                if cv2.waitKey(0) == 33:
+                    continue
+                frame += 1
+                if frame == 300:
+                    for xy in output1:
+                        plt.plot(xy[0], xy[1 ])
+                ret, VIDEOFRAME = CAP.read()
+                VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 
 if __name__ == '__main__':
-    q = queue.Queue()
-    q2 = queue.Queue()
-    q3 = queue.Queue()
-    q4 = queue.Queue()
-    q5 = queue.Queue()
-    q6 = queue.Queue()
-
-
+    qWN = queue.Queue()
+    qMSW = queue.Queue()
+    qNS = queue.Queue()
+    qM = queue.Queue()
+    qEN = queue.Queue()
+    qME = queue.Queue()
+    qWN2 = queue.Queue()
+    #qMW = queue.Queue()
 
     # Producers
-    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoNW.mkv',), daemon=True).start()
-    threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start()
-    threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start()
-    threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start()
-    threadCamMW = threading.Thread(target=trackerCamMW, args=('videos/VideoMW.mkv',), daemon=True).start()
-    threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start()
-
+    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
+    threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
+    threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
+    threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
+    threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start() #5
+    threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start() # 6
+    threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/VideoMW.mkv',), daemon=True).start()  # 7
+    #threadCamMW = threading.Thread(target=trackerCamMW, args=('videos/VideoMW.mkv',), daemon=True).start()  # 8
 
     # Consumer
     consumerThread = threading.Thread(target=consumer).start()
-
-
-
-
-
