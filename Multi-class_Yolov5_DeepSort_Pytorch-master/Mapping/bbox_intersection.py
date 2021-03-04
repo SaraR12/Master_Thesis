@@ -6,29 +6,30 @@ from shapely.geometry import Polygon
 CLASSES = ['AGV', 'Human']
 CAMERAS = ['','WN', 'MSW', 'NS', 'M', 'EN', 'ME', 'WN2', 'MW']
 
-#### POLYGON AREA ####
+############################## POLYGON AREA ##############################
 def areaOfPolygon(p):
     return 0.5 * abs(sum(x0*y1 - x1*y0
                          for ((x0, y0), (x1, y1)) in segments(p)))
 def segments(p):
     return zip(p, p[1:] + [p[0]])
 
-def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_list, cam_id_list, img, offset=(0,0)):
-    # bbox_list = list with bounding boxes from cameras
-    # mapping_objects = Homography from the different cameras
-    mappedImg = img
+############################### DRAW BBOXES ###############################
+
+def draw_multiple_boxes(bbox_list, mapping_objects, classes_list, cam_id_list, img):
+    '''
+    Input:  bbox_list: 2D list of bboxes
+            mapping_objects: List of mapper class objects
+            classes_list: 2D list with classes for each boundingbox
+            cam_id_list: 2D list with camera id for each bounding box to know which camera it comes from
+            img: Image to draw the boxes on
+
+    Output: Image with boundingboxes
+    '''
+
     classes_list = [item.tolist() for item in classes_list]
-    #print('List in function: ', classes_list)
-    j = 0
-    for bbox, mapperObject, identities, cls, cam_id in zip(bbox_list, mapping_objects, identities_list, classes_list,cam_id_list):
+    for bbox, mapperObject, cls, cam_id in zip(bbox_list, mapping_objects, classes_list, cam_id_list):
         for (i, box), id in zip(enumerate(bbox), cam_id):
             x1, y1, x2, y2 = [int(i) for i in box]
-            x1 += offset[0]
-            x2 += offset[0]
-            y1 += offset[1]
-            y2 += offset[1]
-
-            color = compute_color_for_labels(id)
 
             # Mapping to plane
             pTL = np.array([[x1, y1]], dtype='float32')
@@ -49,25 +50,30 @@ def draw_multiple_boxes(bbox_list, mapping_objects, identities_list, classes_lis
 
             pts = np.array([[xTL, yTL], [xBL, yBL],[xBR, yBR], [xTR, yTR]],
                            np.int32)
-
             pts = pts.reshape((-1, 1, 2))
 
-            cv2.polylines(mappedImg, [pts],
-                          True, color, 2)
-
-            label = str(CAMERAS[int(id)]) #CLASSES[cls[i]]
-            j += 1
-
+            # Plot the boxes
+            color = compute_color_for_labels(id)
+            cv2.polylines(img, [pts], True, color, 2)
+            label = str(CAMERAS[int(id)])
             t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
-            cv2.rectangle(mappedImg, (xTR, yTR), (xTR + t_size[0] + 3, yTR + t_size[1] + 4), color, -1)
-            cv2.putText(mappedImg, label, (xTR, yTR + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-    return mappedImg
+            cv2.rectangle(img, (xTR, yTR), (xTR + t_size[0] + 3, yTR + t_size[1] + 4), color, -1)
+            cv2.putText(img, label, (xTR, yTR + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
 
-def draw_bboxes(bboxlist, mappedImg):
-    #mappedImg = cv2.imread('Mapping/plane.png')
+    return img
+
+def draw_bboxes(bbox_list, img):
+    '''
+    Input:  bbox_list: 2D list of bboxes
+            img: Image to draw on
+
+    Output: img: Image with the boundingboxes on
+    '''
+    # Convert pixels to meter
     scale_x = 50 / 1788
     scale_y = 30 / 1069
-    for bbox in bboxlist:
+
+    for bbox in bbox_list:
         center = bbox[-2]
         centerX = round(scale_x * center[0], 3)
         centerY = round((1069 - center[1]) * scale_y, 3)
@@ -75,157 +81,28 @@ def draw_bboxes(bboxlist, mappedImg):
         pts = np.array([])
         for i in range(len(bbox) -2):
             pts = np.append(pts, np.round(bbox[0]))
-        #pts = np.array([bbox[0], bbox[1], bbox[2], bbox[3]], np.int32)
         pts = pts.reshape((-1, 1, 2))
-        cv2.polylines(mappedImg, [np.int32(pts)], True, (255, 0, 0), 2,)
-        cv2.circle(mappedImg, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
+        cv2.polylines(img, [np.int32(pts)], True, (255, 0, 0), 2)
+        cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
         label = str('x = ' + str(centerX) + ' y = ' + str(centerY))
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
 
         x = round(bbox[0][0])
         y = round(bbox[0][1])
-        #cv2.rectangle(mappedImg, (x, y), (x + t_size[0] + 3, y + t_size[1] + 4), (255, 0, 0), -1)
-        cv2.putText(mappedImg, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-    return mappedImg
 
-"""def draw_bboxesKalman(bboxlist, mappedImg):
-    #mappedImg = cv2.imread('Mapping/plane.png')
-    for bbox in bboxlist:
-        #print(bbox)
-        x1 = bbox[0]
-        y1 = bbox[1]
-        x2 = bbox[2]
-        y2 = bbox[3]
-        color = (166,151,79)
-        cv2.rectangle(mappedImg, (x1, y1), (x2, y2), color, 2)
-    return mappedImg"""
+        cv2.putText(img, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
+    return img
 
-
-"""def iou_bboxes(bbox_list, mapObjects_list, cam_id_list, classes_list):
-    bbox_all_list = np.array([[1,2,3,4,5]], dtype=int)
-    # Collect all bboxes
-    for (bbox, mapObject, bbox_class, cam_id) in zip(bbox_list, mapObjects_list, classes_list, cam_id_list):
-        if bbox != []:
-            for (i, box), id in zip(enumerate(bbox), cam_id):
-                id = int(id)
-                x1c, y1c, x2c, y2c = [int(i) for i in box]
-
-
-                p1 = np.array([[x1c, y1c]], dtype='float32')
-                p2 = np.array([[x2c, y2c]], dtype='float32')
-
-                p1 = np.array([p1])
-                p2 = np.array([p2])
-
-                x1, y1 = mapObject.getPoint(p1)
-                x2, y2 = mapObject.getPoint(p2)
-
-                bbox_w = abs(x2 - x1)
-                bbox_h = abs(y2 - y1)
-
-                # Change top left corner and bottom right corner depending on which direction the camera is pointing
-                # to make it correct against the mapped view
-                if id == 2 or id == 3:  # Camera MSW and NS
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y2, bbox_h, bbox_w, bbox_class]], axis=0)# bbox_all_list = np.append(bbox_all_list, [[y1, x2, bbox_w, bbox_h, bbox_class]], axis=0)
-                elif id == 4 or id == 6:  # Camera M and ME
-                    bbox_all_list = np.append(bbox_all_list, [[x2, y1, bbox_h, bbox_w, bbox_class]], axis=0)
-                else:
-                    bbox_all_list = np.append(bbox_all_list, [[x1, y1, bbox_h, bbox_w, bbox_class]], axis=0)
-
-    bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
-    candidates = np.copy(bbox_all_list)
-
-    matches = np.array([[1, 2, 3, 4]], dtype=int)
-    deleted_bbox = []
-
-    for bbox in bbox_all_list:
-        bbox_cam_ID = cam_id_list.pop(0)
-        bbox_class = classes_list.pop(0)
-        GO = True
-        for box in deleted_bbox:
-            if all(bbox == box):
-                GO = False
-
-        if GO:
-            if candidates.shape[0] > 1:
-                candidates = np.delete(candidates, 0, axis=0)
-                if bbox_class == 1:
-                    print('Human')
-                intersected_bbox, matched_bbox_index = intersection(bbox, bbox_cam_ID, bbox_class, candidates,
-                                                                    cam_id_list)
-
-                if matched_bbox_index is not None:
-                    deleted_bbox.append(candidates[matched_bbox_index, :].tolist())
-                    candidates = np.delete(candidates, matched_bbox_index, axis=0) # Remove matched candidate
-
-                matches = np.append(matches, [intersected_bbox], axis=0)
-
-            else: # If no bounding boxes match, save the bbox as a "solo bbox" (i.e. an object seen only by one camera)
-                intersected_bbox = [bbox[0], bbox[1], bbox[0]+bbox[3], bbox[1]+bbox[2]]
-
-                matches = np.append(matches, [intersected_bbox], axis=0)
-    matches = np.delete(matches, (0), axis=0)
-
-    return matches"""
-
-def intersection(bbox, bbox_cam_ID, bbox_class, candidates, cam_id_list):
-    bb1x1 = bbox[0]
-    bb1y1 = bbox[1]
-    bb1x2 = bbox[0] + bbox[3]
-    bb1y2 = bbox[1] + bbox[2]
-    bbox_class = bbox[4]
-
-    # determine the coordinates of the intersection rectangle
-    iouList = []
-    intersection_bbox = []
-
-    for (i, candidate), Cam_ID in zip(enumerate(candidates), cam_id_list):
-        cls = candidate[4]
-        if (Cam_ID is not bbox_cam_ID) and (cls == bbox_class):
-
-            bb2x1 = candidate[0]
-            bb2y1 = candidate[1]
-            bb2x2 = candidate[0] + candidate[3]
-            bb2y2 = candidate[1] + candidate[2]
-
-            x_left = max(bb1x1, bb2x1)
-            y_top = max(bb1y1, bb2y1)
-            x_right = min(bb1x2, bb2x2)
-            y_bottom = min(bb1y2, bb2y2)
-
-
-            # The intersection of two axis-aligned bounding boxes is always an
-            # axis-aligned bounding box
-            intersection_area = (x_right - x_left) * (y_bottom - y_top)
-
-            # compute the area of both AABBs
-            bb1_area = (bb1x2 - bb1x1) * (bb1y2 - bb1y1)
-            bb2_area = (bb2x2 - bb2x1) * (bb2y2 - bb2y1)
-
-            # compute the intersection over union by taking the intersection
-            # area and dividing it by the sum of prediction + ground-truth
-            # areas - the interesection area
-            if x_right < x_left or y_bottom < y_top:
-                iouList.append(0.0)
-            else:
-                iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
-                iouList.append(iou)
-                if any(iou > item for item in iouList):
-                    bbox_h = y_bottom - y_top
-                    bbox_w = x_right - x_left
-                    intersection_bbox = [x_left, y_top, x_right, y_bottom]
-                    index = i
-
-    #if len(iouList > 0) > 1:
-
-
-    if intersection_bbox == []:
-        intersection_bbox = [bb1x1, bb1y1, bb1x2, bb1y2]
-        index = None
-
-    return intersection_bbox, index
+############################### INTERSECTION ###############################
 
 def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
+    '''
+    Input:  bbox_list: List of N bboxes
+            mapObjects_list: List with mapper class objects
+            camera_id_list: List with camera id for each bbox
+
+    Output: iou_matrix: NxN matrix with IoU-value
+    '''
     bbox_list = bbox_to_coords(bbox_list, mapObjects_list, camera_id_list)
     iou_matrix = np.zeros((len(bbox_list), len(bbox_list)))
 
@@ -240,12 +117,9 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
         bb1yBR = bbox[7]
         p1 = Polygon([(bb1xTL, bb1yTL), (bb1xTR, bb1yTR), (bb1xBR, bb1yBR), (bb1xBL, bb1yBL)])
 
-        """p11 = gpd.GeoSeries(p1)
-        p11.plot()"""
         areaBbx1 = areaOfPolygon([[bb1xTL, bb1yTL], [bb1xTR, bb1yTR], [bb1xBR, bb1yBR], [bb1xBL, bb1yBL]])
         # determine the coordinates of the intersection rectangle
-        iouList = []
-        intersection_bbox = []
+
         for j, candidate in enumerate(bbox_list):
             bb2xTL = candidate[0]
             bb2yTL = candidate[1]
@@ -256,14 +130,9 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
             bb2xBR = candidate[6]
             bb2yBR = candidate[7]
             p2 = Polygon([(bb2xTL, bb2yTL), (bb2xTR, bb2yTR), (bb2xBR, bb2yBR), (bb2xBL, bb2yBL)])
-            """p22 = gpd.GeoSeries(p2)
-            p22.plot()"""
 
             if p1.intersects(p2):
                 intersection = p1.intersection(p2)
-                """intersection1 = gpd.GeoSeries(intersection)
-                intersection1.plot()
-                plt.show()"""
 
                 intersection = intersection.exterior.coords.xy
                 intersected_bbox = []
@@ -277,7 +146,6 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
             # The intersection of two axis-aligned bounding boxes is always an
             # axis-aligned bounding box
 
-
             if iou == 1:
                 iou_matrix[i,j] = -1
             else:
@@ -285,53 +153,15 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
 
     return iou_matrix
 
-
-
-
-def compute_color_for_labels(label):
-    """
-    Simple function that adds fixed color depending on the class
-    """
-    palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
-
-    color = [int((p * (label ** 2 - label + 1)) % 255) for p in palette]
-    return tuple(color)
-
-def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
-    bbox_all_list = np.array([[1,2,3,4,5,6,7,8]], dtype='int')
-    for (bbox, mapObject, camID) in zip(bbox_list, mapObjects_list, camera_id_list):
-        if bbox != []:
-            for (i, box), id in zip(enumerate(bbox), camID):
-                id = int(id)
-
-                x1c, y1c, x2c, y2c = [int(i) for i in box]
-
-                pTL = np.array([[x1c,y1c]], dtype='float32')
-                pTL = np.array([pTL])
-                xTL, yTL = mapObject.getPoint(pTL)
-
-                pTR = np.array([[x2c, y1c]], dtype='float32')
-                pTR = np.array([pTR])
-                xTR, yTR = mapObject.getPoint(pTR)
-
-                pBL = np.array([[x1c, y2c]], dtype='float32')
-                pBL = np.array([pBL])
-                xBL, yBL = mapObject.getPoint(pBL)
-
-                pBR = np.array([[x2c, y2c]], dtype='float32')
-                pBR = np.array([pBR])
-                xBR, yBR = mapObject.getPoint(pBR)
-
-
-                # Change top left corner and bottom right corner depending on which direction the camera is pointing
-                # to make it correct against the mapped view
-                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]], axis=0)
-
-    bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
-
-    return bbox_all_list
-
 def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list):
+    '''
+    Input:  bbox_list: List of N bboxes
+            mapObjects_list: List with mapper class objects
+            classes_list: List of classes for each bbox
+            camera_id_list: List with camera id for each bbox
+
+    Output: iou_matrix: NxN matrix with IoU-value
+    '''
     iou_matrix = compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list)
     available_bboxes = [i for i in range(iou_matrix.shape[0])]
     intersecting_bboxes = []
@@ -429,17 +259,19 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                                 else:
                                     i += 1
 
-
-
-            """else:
-            end = True
-            break"""
-            #print(index)
-
             intersecting_bboxes.append(intersected_bbox)
             cls_list.append(class_bbox)
     return intersecting_bboxes, cls_list
+
 def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class_list):
+    '''
+    Input:
+            bbox_list: List of N bboxes
+            mapObjects_list: List with mapper class objects
+            camera_id_list: List with camera id for each bbox
+
+    Output: iou_matrix: NxN matrix with IoU-value
+    '''
     intersected_bboxes = []
     measurements = []
     bbox_list = []
@@ -541,51 +373,18 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class
             measurements.append(bi)
     return intersected_bboxes, measurements
 
-
-    # determine the coordinates of the intersection rectangle
-    iouList = []
-    intersection_bbox = []
-
-    for (i, candidate), Cam_ID in zip(enumerate(candidates), cam_id_list):
-        cls = candidate[4]
-        if (Cam_ID is not bbox_cam_ID) and (cls == bbox_class):
-
-            bb2x1 = candidate[0]
-            bb2y1 = candidate[1]
-            bb2x2 = candidate[0] + candidate[3]
-            bb2y2 = candidate[1] + candidate[2]
-
-            x_left = max(bb1x1, bb2x1)
-            y_top = max(bb1y1, bb2y1)
-            x_right = min(bb1x2, bb2x2)
-            y_bottom = min(bb1y2, bb2y2)
-
-            # The intersection of two axis-aligned bounding boxes is always an
-            # axis-aligned bounding box
-            intersection_area = (x_right - x_left) * (y_bottom - y_top)
-
-            # compute the area of both AABBs
-            bb1_area = (bb1x2 - bb1x1) * (bb1y2 - bb1y1)
-            bb2_area = (bb2x2 - bb2x1) * (bb2y2 - bb2y1)
-
-            # compute the intersection over union by taking the intersection
-            # area and dividing it by the sum of prediction + ground-truth
-            # areas - the interesection area
-            if x_right < x_left or y_bottom < y_top:
-                iouList.append(0.0)
-            else:
-                iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
-                iouList.append(iou)
-                if any(iou > item for item in iouList):
-                    bbox_h = y_bottom - y_top
-                    bbox_w = x_right - x_left
-                    intersection_bbox = [x_left, y_top, x_right, y_bottom]
-                    index = i
-
-
+########################## MAPPING #########################
 
 # Maps a list of bounding boxes from camera perspective into planar perspective.
 def map_bboxes(bbox_list, mapObjects_list, classes_list):
+    '''
+    Input:
+            bbox_list: List of N bboxes
+            mapObjects_list: List with mapper class objects
+            classes_list: List of classes for each bbox
+
+    Output: bbox_all_list: List of mapped bboxes
+    '''
     bbox_all_list = np.array([[1,2,3,4,5,6,7,8,9]], dtype=int)
     # Collect all bboxes
     for (bbox, mapObject, bbox_class) in zip(bbox_list, mapObjects_list, classes_list):
@@ -614,3 +413,56 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
     return bbox_all_list
+
+def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
+    '''
+    Input:
+            bbox_list: List of N bboxes
+            mapObjects_list: List with mapper class objects
+            camera_id_list: List with camera id for each bbox
+
+    Output: bbox_all_list: List of mapped bboxes
+    '''
+    bbox_all_list = np.array([[1,2,3,4,5,6,7,8]], dtype='int')
+    for (bbox, mapObject, camID) in zip(bbox_list, mapObjects_list, camera_id_list):
+        if bbox != []:
+            for (i, box), id in zip(enumerate(bbox), camID):
+                id = int(id)
+
+                x1c, y1c, x2c, y2c = [int(i) for i in box]
+
+                pTL = np.array([[x1c,y1c]], dtype='float32')
+                pTL = np.array([pTL])
+                xTL, yTL = mapObject.getPoint(pTL)
+
+                pTR = np.array([[x2c, y1c]], dtype='float32')
+                pTR = np.array([pTR])
+                xTR, yTR = mapObject.getPoint(pTR)
+
+                pBL = np.array([[x1c, y2c]], dtype='float32')
+                pBL = np.array([pBL])
+                xBL, yBL = mapObject.getPoint(pBL)
+
+                pBR = np.array([[x2c, y2c]], dtype='float32')
+                pBR = np.array([pBR])
+                xBR, yBR = mapObject.getPoint(pBR)
+
+
+                # Change top left corner and bottom right corner depending on which direction the camera is pointing
+                # to make it correct against the mapped view
+                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]], axis=0)
+
+    bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
+
+    return bbox_all_list
+
+######################### HELPER FUNCTIONS #################
+
+def compute_color_for_labels(label):
+    """
+    Simple function that adds fixed color depending on the class
+    """
+    palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
+
+    color = [int((p * (label ** 2 - label + 1)) % 255) for p in palette]
+    return tuple(color)

@@ -1,3 +1,6 @@
+import cv2 as cv
+import numpy as np
+
 """
         Mapper
 - Maps a point from one perspective into another.
@@ -15,9 +18,6 @@ Jonas Lindberg
 Sara Roth
 """
 
-from homographies import getKeypoints
-import cv2 as cv
-import numpy as np
 def arrayToInt(p):
     x = int(p[:,:,0])
     y = int(p[:,:,1])
@@ -54,7 +54,6 @@ class Mapper:
 
 
         mappedPoint = self.getPoint(midpoint)
-        #mappedImg = cv.circle(self.planarView, mappedPoint, 3, markerColor, 3)
         mappedImg = cv.rectangle(self.planarView, (x1m, y1m), (x2m, y2m), (0,0,255),2)
         return mappedImg, mappedPoint
 
