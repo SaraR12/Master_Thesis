@@ -39,7 +39,7 @@ def trackerCamNS(path):
         qNSList.append([i])
 
 def trackerCamM(path):
-    camera = 'MW'
+    camera = '1'  # MW
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qMList.append([i])
@@ -57,7 +57,7 @@ def trackerCamME(path):
         qMEList.append([i])
 
 def trackerCamWN2(path):
-    camera = 'WN2'
+    camera = 'MW'  # WN2
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qWN2List.append([i])
@@ -80,7 +80,7 @@ def consumer():
     pts_src, pts_dst = getKeypoints("NS")
     mapObjNS = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("M")
+    pts_src, pts_dst = getKeypoints("1")
     mapObjM = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("EN")
@@ -212,7 +212,6 @@ def consumer():
                 intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
                 img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
 
-
                 #################################### KALMAN FILTERING ######################################################
 
                 if frame == 4:
@@ -268,7 +267,7 @@ if __name__ == '__main__':
     threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
     threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
     threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
-    threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
+    threadCamM = threading.Thread(target=trackerCamM, args=('videos/Video1.mkv',), daemon=True).start() #4
     threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start() #5
     threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start() # 6
     threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/VideoMW.mkv',), daemon=True).start()  # 7
