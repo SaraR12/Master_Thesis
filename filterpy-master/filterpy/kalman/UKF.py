@@ -270,7 +270,7 @@ class UnscentedKalmanFilter(object):
         self.x_prior = np.copy(self.x)
         self.P_prior = np.copy(self.P)
         self.Q = eye(dim_x)
-        self.R = eye(dim_z)
+        self.R = eye(dim_z)*50
         self._dim_x = dim_x
         self._dim_z = dim_z
         self.points_fn = points
