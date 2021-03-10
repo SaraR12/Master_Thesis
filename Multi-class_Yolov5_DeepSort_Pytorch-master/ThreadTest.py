@@ -211,8 +211,6 @@ def consumer():
                 bbox_all_list = map_bboxes(bbox_list, mapping_objects, classes_list)
                 intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
                 img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
-                img2 = cv2.line(img2, (0, 439), (1700,439), (255,0,0),1)
-
 
                 #################################### KALMAN FILTERING ######################################################
 
