@@ -1,29 +1,32 @@
-import cv2
+from Mapping.mapper import Mapper
+
+import cv2 as cv
 import numpy as np
-from mapper import Mapper
-from homographies import getKeypoints
 import matplotlib.pyplot as plt
 
-cap = cv2.VideoCapture('videos/VideoMSW.mkv')
-ret, frame = cap.read()
+plane = cv.imread('Mapping/plane.png')
+cap = cv.VideoCapture('videos/VideoM.mkv')
+ret, camera = cap.read()
+ret, camera = cap.read()
 
-plane = cv2.imread('Mapping/plane.png')
+pts_src = np.array([[557,738],[1548,405],[1037,113],[1321,14],[618,57],[425,521],[524,278]])
+pts_dst = np.array([[146,488],[332,966],[608,709],[748,941],[683,399],[257,396],[433,396]])
+[[], [], [], [], [], [], []]
+x = 481
+y = 396
+mapper = Mapper(plane, pts_src, pts_dst)
+point = np.array([[x,y]], dtype='float32')
+point = np.array([point])
 
-pts_src, pts_dst = getKeypoints('MSW')
+xtilde, ytilde = mapper.getPoint(point)
+print(xtilde, ytilde)
+cv.circle(camera, (x, y), 1, (0, 0, 255), 3)
+cv.circle(plane, (xtilde, ytilde), 1, (0, 0, 255), 3)
 
-mapper = Mapper(plane,pts_src,pts_dst)
+fig, (ax1, ax2) = plt.subplots(1, 2)
+fig.suptitle('Mapping test')
 
-a = np.array([[1267,832]], dtype='float32')
-a = np.array([a])
+ax1.imshow(camera)
+ax2.imshow(plane)
 
-(x, y) = mapper.getPoint(a)
-
-cv2.circle(frame, (1267,832),2,(0,255,0),3)
-cv2.circle(plane, (x,y), 2, (0,255,0),3)
-print((x,y))
-
-plt.subplot(1,2,1)
-plt.imshow(frame)
-plt.subplot(1,2,2)
-plt.imshow(plane)
 plt.show()
