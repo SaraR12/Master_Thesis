@@ -71,23 +71,56 @@ def draw_boxes(img, bbox, cls_names, scores,camera, identities=None, offset=(0,0
         x2 += offset[0]
         y1 += offset[1]
         y2 += offset[1]
+
+
         # box text and bar
         id = int(identities[i]) if identities is not None else 0    
         color = compute_color_for_labels(id)
         label = '%d %s %d' % (id, cls_names[i], scores[i])
         label += '%'
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2 , 2)[0]
-        cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
+        #cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
+
+
+
+        cv2.circle(img, (x1, y1), 3, (255, 0, 0), 3)
+
+        #cv2.circle(img, (x2, y1), 3, (0, 0, 255), 3)
+        #cv2.circle(img, (x1, y2), 3, (0, 255, 0), 3)
+        cv2.circle(img, (x2, y2), 3, (255, 255, 255), 3)
+
         cv2.rectangle(img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
-
         # Mapping to plane
         x1m, x2m, y1m, y2m, color = mapperObject.mapBoundingBoxPoints(x1,x2,y1,y2, color)
-        cv2.line(mappedImg, (x1m, y1m), (x1m, y2m), color, 2) # left line
-        cv2.line(mappedImg, (x2m, y1m), (x2m, y2m), color, 2) # right line
-        cv2.line(mappedImg, (x1m, y1m), (x2m, y1m), color, 2) # top line
-        cv2.line(mappedImg, (x1m, y2m), (x2m, y2m), color, 2) # bottom line
-        #cv2.rectangle(mappedImg, (x1m, y1m), (x2m, y2m), color, 1)
+
+
+        pTL = np.array([[x1,y1]], dtype='float32')
+        pTL = np.array([pTL])
+        xTL, yTL = mapperObject.getPoint(pTL)
+
+        pTR = np.array([[x2, y1]], dtype='float32')
+        pTR = np.array([pTR])
+        xTR, yTR = mapperObject.getPoint(pTR)
+
+        pBL = np.array([[x1, y2]], dtype='float32')
+        pBL = np.array([pBL])
+        xBL, yBL = mapperObject.getPoint(pBL)
+
+        pBR = np.array([[x2, y2]], dtype='float32')
+        pBR = np.array([pBR])
+        xBR, yBR = mapperObject.getPoint(pBR)
+
+        cv2.line(mappedImg, (xTL, yTL), (xTR, yTR), color, 2) # left line
+        cv2.line(mappedImg, (xTR, yTR), (xBR, yBR), color, 2) # right line
+        cv2.line(mappedImg, (xBR, yBR), (xBL, yBL), color, 2) # top line
+        cv2.line(mappedImg, (xBL, yBL), (xTL, yTL), color, 2) # bottom line
+        """cv2.circle(mappedImg, (x1m, y1m), 3, (255, 0, 0), 3)
+        cv2.circle(mappedImg, (x1m, y2m), 3, (0, 0, 255), 3)
+        cv2.circle(mappedImg, (x2m, y1m), 3, (0, 255, 0), 3)
+        cv2.circle(mappedImg, (x2m, y2m), 3, (255, 255, 255), 3)"""
+
+
         #allMappedPoints.append(mappedPoint)
 
 
@@ -157,6 +190,8 @@ def detect(opt, device,camera, queue=None, save_img=False):
     img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
     _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
     frame = 0
+    mappedImg = PLANAR_MAP
+
     for path, img, im0s, vid_cap in dataset:
         frame += 1
 
@@ -256,13 +291,14 @@ def detect(opt, device,camera, queue=None, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            """if cv2.waitKey(0) == 33:
-                continue"""
+            """   """
+            if cv2.waitKey(0) == 33:
+                continue
             # Stream results
             if True:
                 #numpy_horizontal = np.hstack((im0, mappedImg))
-                #cv2.imshow(p, im0)
-                #cv2.imshow('1',mappedImg)
+                cv2.imshow(p, im0)
+                cv2.imshow('1', mappedImg)
 
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
@@ -297,11 +333,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoMW.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoME.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
+    parser.add_argument('--iou-thres', type=float, default=0.01, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
@@ -323,9 +359,10 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'MW')
+        out = detect(args, device, 'ME')
         for i in out:
             test.append(i)
+
 
 def run(path, camera, queue = None):
     print(path)
@@ -335,8 +372,8 @@ def run(path, camera, queue = None):
     parser.add_argument('--source', type=str, default=path, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.01, help='IOU threshold for NMS')
+    parser.add_argument('--conf-thres', type=float, default=0.8, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
