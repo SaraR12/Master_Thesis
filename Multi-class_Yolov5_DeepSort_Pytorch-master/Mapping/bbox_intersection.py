@@ -79,8 +79,8 @@ def draw_bboxes(bbox_list, img):
         centerY = round((1069 - center[1]) * scale_y, 3)
 
         pts = np.array([])
-        for i in range(len(bbox) -2):
-            pts = np.append(pts, np.round(bbox[0]))
+        for i in range(len(bbox) - 1):
+            pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
         cv2.polylines(img, [np.int32(pts)], True, (255, 0, 0), 2)
         cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)

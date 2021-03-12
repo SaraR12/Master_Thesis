@@ -95,8 +95,8 @@ def fx(x):
 sigmapoints = MerweScaledSigmaPoints(n=4, alpha=1e3, beta=2, kappa=0.)
 
 ukf = UnscentedKalmanFilter(dim_x=4,dim_z=2, dt=1/24, hx=hx, fx=fx, points=sigmapoints)
-ukf.x = [92, 726]"""
-"""
+ukf.x = [92, 726]
+
 for z in zs:
     print(z)
     ukf.update(z, hx, fx)
