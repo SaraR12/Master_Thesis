@@ -1,9 +1,9 @@
 import math
 
-
 def getSafetyZone(centerList, headingList, class_list):
     points_list = []
     for center, heading, cls in zip(centerList, headingList, class_list):
+        # Different size of bounding box depending on class
         if cls == 0:  # AGV
             w = 50
             h = 50
