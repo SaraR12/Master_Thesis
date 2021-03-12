@@ -88,8 +88,8 @@ class IMMEstimator(object):
     --------
 
     >>> import numpy as np
-    >>> from filterpy import kinematic_kf
-    >>> from filterpy import IMMEstimator
+    >>> from filterpy.common import kinematic_kf
+    >>> from filterpy.kalman import IMMEstimator
     >>> kf1 = kinematic_kf(2, 2)
     >>> kf2 = kinematic_kf(2, 2)
     >>> # do some settings of x, R, P etc. here, I'll just use the defaults
