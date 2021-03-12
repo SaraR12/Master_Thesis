@@ -1,12 +1,10 @@
 import cv2
-import numpy as np
 from deep_sort.deep_sort.sort.kalman_filter import *
 
-import math
 import sys, os
-sys.path.append(os.path.abspath(os.path.join('..', 'filterpy-master')))
-from filterpy.kalman.UKF import *
-from filterpy.kalman.sigma_points import MerweScaledSigmaPoints
+sys.path.append(os.path.abspath(os.path.join('..', 'GitHub/filterpy-master')))
+from filterpy.kalman import *
+from filterpy.kalman import MerweScaledSigmaPoints
 #from filterpy.kalman.kalman_filter import *
 #from filterpy-master.filterpy.kalman.CubatureKalmanFilter import *
 

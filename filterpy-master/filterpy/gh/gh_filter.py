@@ -266,7 +266,7 @@ class GHFilter(object):
     Create a basic filter for a scalar value with g=.8, h=.2.
     Initialize to 0, with a derivative(velocity) of 0.
 
-    >>> from filterpy.gh import GHFilter
+    >>> from filterpy import GHFilter
     >>> f = GHFilter (x=0., dx=0., dt=1., g=.8, h=.2)
 
     Incorporate the measurement of 1

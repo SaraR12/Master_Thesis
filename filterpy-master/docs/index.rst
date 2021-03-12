@@ -82,6 +82,90 @@ There are several submodules, each listed below. But in general you will
 need to import which classes and/or functions you need from the correct
 submodule, construct the objects, and then execute your code. Something lke
 
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
+    >>> from filterpy import KalmanFilter
+    >>> kf = KalmanFilter(dim_x=3, dim_z=1)
+
+I try to provide examples in the help for each class, but this documentation
+needs a lot of work. For now I refer you to my book mentioned above if the
+documentation is not adequate. Better yet, write an issue on the GitHub
+issue tracker. I will respond with an answer as soon as I am online and
+available (minutes to a day, normally), and then revise the documentation.
+I shouldn't have to be prodded like this, but life is limited. So prod.
+
+Raise issues here:
+need to import which classes and/or functions you need from the correct
+submodule, construct the objects, and then execute your code. Something lke
+
     >>> from filterpy.kalman import KalmanFilter
     >>> kf = KalmanFilter(dim_x=3, dim_z=1)
 

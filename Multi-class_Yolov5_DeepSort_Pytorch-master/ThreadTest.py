@@ -8,6 +8,7 @@ import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
 
+
 ############################################## MAIN FILE ######################################################
 # Main file, run this file
 

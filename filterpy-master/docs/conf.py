@@ -35,8 +35,6 @@ for mod_name in MOCK_MODULES:
 #sys.path.insert(0, os.path.abspath('../filterpy'))
 sys.path.insert(0, os.path.abspath('../'))
 
-from filterpy import *
-import filterpy
 import filterpy.kalman
 
 # -- General configuration ------------------------------------------------

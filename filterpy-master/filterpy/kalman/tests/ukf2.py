@@ -1522,7 +1522,7 @@ def two_radar():
     from numpy import array
     from numpy.linalg import norm
     from numpy.random import randn
-    from math import atan2, radians
+    from math import atan2
 
     from filterpy.common import Q_discrete_white_noise
 
