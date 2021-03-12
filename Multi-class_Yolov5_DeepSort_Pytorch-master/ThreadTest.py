@@ -6,6 +6,7 @@ from homographies import *
 from KalmanTracker import *
 import trackNoDeepSort
 import matplotlib.pyplot as plt
+from CollisionAvoidance.safety_zone import getSafetyZone
 
 ############################################## MAIN FILE ######################################################
 # Main file, run this file
@@ -39,7 +40,7 @@ def trackerCamNS(path):
         qNSList.append([i])
 
 def trackerCamM(path):
-    camera = '1'  # MW
+    camera = 'M'
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qMList.append([i])
@@ -57,7 +58,7 @@ def trackerCamME(path):
         qMEList.append([i])
 
 def trackerCamWN2(path):
-    camera = 'MW'  # WN2
+    camera = 'MW'
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qWN2List.append([i])
@@ -80,7 +81,7 @@ def consumer():
     pts_src, pts_dst = getKeypoints("NS")
     mapObjNS = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("1")
+    pts_src, pts_dst = getKeypoints("M")
     mapObjM = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("EN")
@@ -210,34 +211,46 @@ def consumer():
                 # Map the projected bboxes, intersect and plot them
                 bbox_all_list = map_bboxes(bbox_list, mapping_objects, classes_list)
                 intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
-                img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
-
+                #img2 = draw_bboxes(intersected_bboxes, VIDEOFRAME)
+                img2 = VIDEOFRAME
                 #################################### KALMAN FILTERING ######################################################
 
                 if frame == 4:
                     output1.append(measurements[0][-2])
-                    bbox_xyah = preprocessMeasurements(measurements)
-                    filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
+
+
+                    bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
+                    #filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
+                    filter_listUKF, x_list = InitUKFTracker(bbox_xyah)
                     opticalflow_list = []
-                    """for (id, bbox) in enumerate(bbox_xyah):
-                        opticalflow_list.append(OpticalFlow(frame, id, bbox, ))"""
+
+                    for (id, bbox), cls in zip(enumerate(bbox_xyah), classlist_bbox):
+                        opticalflow_list.append(OpticalFlow(frame, id, bbox, cls))
+
                 elif frame > 4:
-                    if frame == 15:
-                        print('15')
-                    bbox_xyah = preprocessMeasurements(measurements)
+                    bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
+                    heading_list = []
+                    for (id,bbox), cls, opflow in zip(enumerate(bbox_xyah), classlist_bbox, opticalflow_list):
+                        state = opflow(frame, id, bbox, cls)
+                        heading_list.append(state[0])
+                        print('state', state)
 
-                    filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
+                    #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
+                    filter_listUKF, x_list = predictUKFTracker(filter_listUKF, x_list)
 
-                    bbox_xyah = association(filter_list, mean_list, covariance_list, bbox_xyah)
+                    bbox_xyah, classlist_bbox = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
 
-                    output1.append(calculateCenterPoint(bbox_xyah[0]))
+                    #output1.append(calculateCenterPoint(bbox_xyah[0]))
 
-                    filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
+                    #filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
+                    filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
+                    #outputFiltered1.append(calculateCenterPoint(mean_list[0]))
 
-                    outputFiltered1.append(calculateCenterPoint(mean_list[0]))
+                    points_list = getSafetyZone(x_list,heading_list, classlist_bbox)
+                    img2 = draw_bboxes(points_list, img2)
 
                     # Draw filter outputs
-                    drawFilterOutput(mean_list, img2)
+                    #img2 = drawFilterOutput(x_list, img2)
 
                 ######################################## SHOW RESULTS ######################################################
                 print('Frame: ', frame)
@@ -267,7 +280,7 @@ if __name__ == '__main__':
     threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
     threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
     threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
-    threadCamM = threading.Thread(target=trackerCamM, args=('videos/Video1.mkv',), daemon=True).start() #4
+    threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
     threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start() #5
     threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start() # 6
     threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/VideoMW.mkv',), daemon=True).start()  # 7
