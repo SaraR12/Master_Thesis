@@ -41,6 +41,7 @@ def getSafetyZone(centerList, headingList, class_list):
                 else:
                     p0[1] += yheading*3
                     p1[1] += yheading*3
+
         #   p0, p1, p2, p3 = rect.rotate_rectangle(p0,p1,p2,p3,angle)
         points_list.append([p0,p1,p2,p3, [center[0], center[1], [1]]])
     return points_list
