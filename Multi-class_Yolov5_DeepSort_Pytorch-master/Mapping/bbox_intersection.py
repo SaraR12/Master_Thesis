@@ -149,7 +149,7 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
             if iou == 1:
                 iou_matrix[i,j] = -1
             else:
-                iou_matrix[i, j] = iou
+                iou_matrix[i,j] = iou
 
     return iou_matrix
 

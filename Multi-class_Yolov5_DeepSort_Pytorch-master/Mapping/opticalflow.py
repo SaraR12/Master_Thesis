@@ -37,16 +37,16 @@ import math
     
 class OpticalFlow:
     
-    def __init__(self, frame, id_b, BBOX, class_name):
+    def __init__(self, frame, id_b, center_point, class_name):
         self.frame = 0
         self.last_frame = 0
         self.id_b = id_b
-        self.last_BBOX = BBOX
-        self.this_BBOX = BBOX
+        self.last_center_point = center_point
+        self.this_center_point = center_point
         self.class_name = class_name
         self.opt_dict = {} 
 
-    def __call__(self, frame, id_b, BBOX, class_name, writeDict=False):
+    def __call__(self, frame, id_b, center_point, class_name, writeDict=False):
         
         ### REMOVE LATER ####
         if writeDict:
@@ -72,11 +72,11 @@ class OpticalFlow:
         self.frame = frame # Update current frame to input frame
         '''self.last_BBOX = bbox_curr # Update last bbox to the previous current bbox'''
 
-        self.this_BBOX = BBOX # Update current bbox to input bbox
+        self.this_center_point = center_point # Update to new center point
         self.class_name = class_name # Update class_name
 
         # Add new info to dictonary
-        self.opt_dict[str(self.id_b)] = [self.id_b, self.last_frame, self.frame, self.last_BBOX, self.this_BBOX , self.class_name ]
+        self.opt_dict[str(self.id_b)] = [self.id_b, self.last_frame, self.frame, self.last_center_point, self.this_center_point , self.class_name ]
 
         if writeDict:
             with open(PATH_DICT, 'a') as fs:
@@ -87,36 +87,36 @@ class OpticalFlow:
         # Center point for last box
         """last_box_center_x = self.last_BBOX[0] + self.last_BBOX[2]/2
         last_box_center_y = self.last_BBOX[1] - self.last_BBOX[3]/2"""
-        last_box_center_x = self.last_BBOX[0]
-        last_box_center_y = self.last_BBOX[1]
-        last_box_center = np.array([last_box_center_x, last_box_center_y])
+        #last_center_point_x = self.last_center_point[0]
+        #last_center_point_y = self.last_center_point[1]
+        #last_center_point = np.array([last_center_point_x, last_center_point_y])
 
         # Center point for this box
         """this_box_center_x = self.this_BBOX[0] + self.this_BBOX[2]/2
         this_box_center_y = self.this_BBOX[1] - self.this_BBOX[3]/2"""
-        this_box_center_x = self.this_BBOX[0]
-        this_box_center_y = self.this_BBOX[1]
-        this_box_center = np.array([this_box_center_x, this_box_center_y])
+        #this_center_point_x = self.this_center_point[0]
+        #this_center_point_y = self.this_center_point[1]
+        #this_center_point = np.array([this_box_center_x, this_box_center_y])
 
         # Frame delta
         frame_delta = self.frame - self.last_frame
 
         # Box delta in pixels/frame, vector of delta x and delta y 
         if frame_delta == 0:
-            box_delta_xy = (this_box_center - last_box_center)
-            heading_xy = math.arctan(box_delta_xy[1]/box_delta_xy[0])
+            center_point_xy = (self.this_center_point - self.last_center_point)
+            heading_xy = math.atan(center_point_xy[1]/center_point_xy[0])
             heading_xy = math.degrees(heading_xy)
         else:
-            box_delta_xy = (this_box_center - last_box_center)/frame_delta
-            heading_xy = math.atan(box_delta_xy[1] / box_delta_xy[0])
+            center_point_xy = (self.this_center_point - self.last_center_point)/frame_delta
+            heading_xy = math.atan(center_point_xy[1] / center_point_xy[0])
             heading_xy = math.degrees(heading_xy)
 
             #state = [self.frame, self.id_b, -1, self.class_name, np.array([last_box_center_x, last_box_center_y]), np.array([this_box_center_x, this_box_center_y]), box_delta_xy]
-        state = [box_delta_xy, heading_xy]
+        state = [center_point_xy, heading_xy]
         # state = [frame, id, camera ID = -1, class, np.array(prev_x prev_y), np.array(x, y), np.array(dx, dy)]
 
         self.last_frame = frame
-        self.last_BBOX = BBOX
+        self.last_center_point = center_point
 
         ############REMOVE LATER ###########
         if writeDict:

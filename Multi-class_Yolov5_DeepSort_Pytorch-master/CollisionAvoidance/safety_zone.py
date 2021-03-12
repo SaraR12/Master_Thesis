@@ -21,26 +21,52 @@ def getSafetyZone(centerList, headingList, class_list):
         p2 = [x + w/2, y + h/2]  # BR
         p3 = [x - w/2, y + h/2]  # BL
 
-        xheading = heading[0]
-        yheading = heading[1]
+        # Difference in x and y
+        xheading = round(heading[0])
+        yheading = round(heading[1])
+        threshold = 2
 
-        if any(heading > 1):
-            if any(heading > 30):
-                break
-            if abs(xheading) > abs(yheading):
+        if any(heading > 1) and cls == 0:
+
+            if abs(abs(xheading) - abs(yheading)) < threshold:
+                if xheading > 0 and yheading > 0:
+                    p1[0] += xheading*4
+                    p2[0] += xheading*4
+                    p2[1] += yheading*4
+                    p3[1] += yheading*4
+                elif xheading > 0 and yheading < 0:
+                    p0[1] -= yheading*4
+                    p1[1] -= yheading*4
+                    p1[0] += xheading*4
+                    p2[0] += xheading*4
+                elif xheading < 0 and yheading < 0:
+                    p0[0] -= xheading*4
+                    p0[1] -= yheading*4
+                    p1[1] -= yheading*4
+                    p3[0] -= xheading*4
+                elif xheading < 0 and yheading > 0:
+                    p0[0] -= xheading*4
+                    p3[0] -= xheading*4
+                    p3[1] += yheading*4
+                    p2[1] += yheading*4
+
+            elif abs(xheading) > abs(yheading):
                 if xheading > 0:
-                    p1[0] += xheading*3
-                    p2[0] += xheading*3
+                    p1[0] += xheading*4
+                    p2[0] += xheading*4
                 else:
-                    p0[0] += xheading*3
-                    p3[0] += xheading*3
-            else:
+                    p0[0] -= xheading*4
+                    p3[0] -= xheading*4
+
+            elif abs(yheading) > abs(xheading):
                 if yheading > 0:
-                    p2[1] += yheading*3
-                    p3[1] += yheading*3
+                    p2[1] += yheading*4
+                    p3[1] += yheading*4
                 else:
-                    p0[1] += yheading*3
-                    p1[1] += yheading*3
+                    p0[1] -= yheading*4
+                    p1[1] -= yheading*4
+
+
         #   p0, p1, p2, p3 = rect.rotate_rectangle(p0,p1,p2,p3,angle)
         points_list.append([p0,p1,p2,p3, [center[0], center[1], [1]]])
     return points_list
