@@ -1,4 +1,4 @@
-import threading, queue
+import threading, queue, time
 
 from Mapping.bbox_intersection import *
 from Mapping.opticalflow import *
@@ -24,7 +24,7 @@ qWN2List = []
 
 # Create functions for running each camera. One list q for each camera
 def trackerCamWN(path):
-    camera = 'WN'
+    camera = '1'
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qWNList.append([i])
@@ -74,7 +74,7 @@ def consumer():
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 
     # Get all the homographies to the different cameras
-    pts_src, pts_dst = getKeypoints('WN')
+    pts_src, pts_dst = getKeypoints('1')
     mapObjWN = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("MSW")
@@ -101,12 +101,16 @@ def consumer():
     outputFiltered1 = []
     i = 0
     frame = 1
+<<<<<<< HEAD
     plt.show()
 
 
     prev_time = time.time()
+=======
+    # used to record the time when we processed last frame
+    prev_frame_time = 0
+>>>>>>> fb3ebea (update)
     while i < 300:
-
         lenWN = len(qWNList)
         lenMSW = len(qMSWList)
         lenNS = len(qNSList)
@@ -192,7 +196,8 @@ def consumer():
                                [(np.ones(len(bbox_xyxyME if bbox_xyxyME is not None else []))*6)[:].tolist()] +
                                [(np.ones(len(bbox_xyxyWN2 if bbox_xyxyWN2 is not None else []))*7)[:].tolist()]][0]
 
-
+                if frame == 65:
+                    print('Debug')
                 classes_list = [classesWN.tolist() + classesMSW.tolist() + classesNS.tolist() +
                                 classesM.tolist() + classesEN.tolist() + classesME.tolist() + classesWN2.tolist()][0]
 
@@ -260,9 +265,18 @@ def consumer():
                     #img2 = drawFilterOutput(x_list, img2)
 
                 ######################################## SHOW RESULTS ######################################################
+<<<<<<< HEAD
                 new_time = time.time()
                 fps = frame/(new_time - prev_time)     # FPS = 1/tid att köra
                 fps = round(fps,2)
+=======
+                new_frame_time = time.time()
+                fps = 1 / (new_frame_time - prev_frame_time)
+                prev_frame_time = new_frame_time
+                fps = round(fps,2)
+                cv2.putText(img, str(fps), (7, 70), cv2.FONT_HERSHEY_PLAIN, 3, (100, 255, 0), 3, cv2.LINE_AA)
+
+>>>>>>> fb3ebea (update)
                 print('Frame: ', frame)
                 cv2.putText(img,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
                 cv2.imshow('overview', img)
@@ -278,7 +292,6 @@ def consumer():
                         plt.plot(xy[0], xy[1 ])
                 ret, VIDEOFRAME = CAP.read()
                 VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
-
 if __name__ == '__main__':
     qWN = queue.Queue()
     qMSW = queue.Queue()
@@ -289,7 +302,7 @@ if __name__ == '__main__':
     qWN2 = queue.Queue()
 
     # Producers
-    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
+    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/Video1.mkv',), daemon=True).start() #1
     threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
     threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
     threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
