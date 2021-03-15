@@ -149,7 +149,7 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
             if iou == 1:
                 iou_matrix[i,j] = -1
             else:
-                iou_matrix[i,j] = iou
+                iou_matrix[i, j] = iou
 
     return iou_matrix
 
@@ -355,8 +355,10 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class
                 intersected_bboxes.append(bi)
                 measurements.append(bi)
         else:
-            bbx1 = bbox_list[bbox_indexes[0]]
-
+            try:
+                bbx1 = bbox_list[bbox_indexes[0]]
+            except:
+                print('oj')
             bb1xTL = bbx1[0]
             bb1yTL = bbx1[1]
             bb1xTR = bbx1[2]
@@ -387,7 +389,8 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
     '''
     bbox_all_list = np.array([[1,2,3,4,5,6,7,8,9]], dtype=int)
     # Collect all bboxes
-    for (bbox, mapObject, bbox_class) in zip(bbox_list, mapObjects_list, classes_list):
+    index = 0
+    for (bbox, mapObject) in zip(bbox_list, mapObjects_list):
         if bbox != []:
             for i, box in enumerate(bbox):
                 x1c, y1c, x2c, y2c = [int(i) for i in box]
@@ -409,7 +412,9 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
                 xBR, yBR = mapObject.getPoint(BR)
                 xBL, yBL = mapObject.getPoint(BL)
 
-                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, bbox_class]], axis=0)
+                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, classes_list[index]]], axis=0)
+
+                index += 1
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
     return bbox_all_list
