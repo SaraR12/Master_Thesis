@@ -24,9 +24,9 @@ def getSafetyZone(centerList, headingList, class_list):
         # Difference in x and y
         xheading = math.ceil(heading[0])
         yheading = math.ceil(heading[1])
-        threshold = 2
+        threshold = 4
 
-        if any(heading > 1) and cls == 0:
+        if any(heading > 0) and cls == 0:
 
             if abs(abs(xheading) - abs(yheading)) < threshold and all([xheading,yheading]):
                 print('threshold', threshold)
