@@ -5,5 +5,6 @@ yolov4.weights
 /DeepSORT_YOLOv5_Pytorch-master/
 /Blender_Simulations
 #Multi-class_YOLOv5_DeepSort_Pytorch-master/inference
-__pycache__/
+*/__pycache__/*
 *.pyc
+*.py[cod]
