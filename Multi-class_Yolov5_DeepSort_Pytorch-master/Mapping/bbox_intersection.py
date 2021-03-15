@@ -69,6 +69,8 @@ def draw_bboxes(bbox_list, img):
 
     Output: img: Image with the boundingboxes on
     '''
+    h, w, _ = img.shape
+
     # Convert pixels to meter
     scale_x = 50 / 1788
     scale_y = 30 / 1069
@@ -84,13 +86,19 @@ def draw_bboxes(bbox_list, img):
         pts = pts.reshape((-1, 1, 2))
         cv2.polylines(img, [np.int32(pts)], True, (255, 0, 0), 2)
         cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
+
+        # Draw information window
         label = str('x = ' + str(centerX) + ' y = ' + str(centerY))
-        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
+        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
 
         x = round(bbox[0][0])
         y = round(bbox[0][1])
 
-        cv2.putText(img, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
+        cv2.putText(img, str('x = ' + str(centerX)), (x, y - 2 * t_size[1] - 8), cv2.FONT_HERSHEY_PLAIN, 1,
+                    [0, 0, 0], 1)
+        cv2.putText(img, str('y = ' + str(centerY)), (x, y - t_size[1] - 4), cv2.FONT_HERSHEY_PLAIN, 1,
+                    [0, 0, 0], 1)
+
     return img
 
 ############################### INTERSECTION ###############################

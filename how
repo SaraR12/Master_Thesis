@@ -1,0 +1,284 @@
+[33mcommit 848d2d3bcc29ee0411909bafc7662e7b4d813013[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Mar 15 11:07:08 2021 +0100
+
+    merging
+
+[33mcommit fb3ebea3a525c89c79709ddbcd50be432531e1f1[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Mar 15 11:00:56 2021 +0100
+
+    update
+
+[33mcommit a332a62797147b3d3fd8181105fa6ddede9a60a1[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Mar 15 10:59:52 2021 +0100
+
+    Fixed function map_bboxes
+
+[33mcommit 5ae11c7f9dca48493601392cbe713f9aa549d15b[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Fri Mar 12 10:17:10 2021 +0100
+
+    Added filterpy
+
+[33mcommit 43ee8c3ef1a816ed02820ff12429873afcca32ab[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Fri Mar 12 08:19:49 2021 +0100
+
+    Fixar o donar
+
+[33mcommit 0991934d9626192b4c1bb391a681fe05b675aafa[m
+Merge: 124b291 b27ba08
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Fri Mar 12 08:18:38 2021 +0100
+
+    Merge branch 'jonas'
+
+[33mcommit b27ba080952c83856d34237c41409fff433d432f[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Fri Mar 12 08:18:01 2021 +0100
+
+    Friday morning
+
+[33mcommit 124b2917a834f3c3aad6bb58dbf20020e55047a0[m
+Merge: 3f35046 c54f26d
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 13:49:16 2021 +0100
+
+    Merge branch 'jonas'
+
+[33mcommit 3f350469b52a27b1bd670ccccefe21c6f1d74368[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 13:48:52 2021 +0100
+
+    trying to merge
+
+[33mcommit 5e6d961d01aca64b85ccc50c93fc374a081f2e5a[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 13:41:44 2021 +0100
+
+    trying to merge
+
+[33mcommit cc92f42721f6d7227b90ffd0cde365c63f38c77a[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 13:40:07 2021 +0100
+
+    trying to merge
+
+[33mcommit c54f26d22823e69c3676bd7a8cfdec08a4ea64c7[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 13:36:45 2021 +0100
+
+    update
+
+[33mcommit 2c7805af2764f9fc04798a603b5a6f30b595dcb9[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 11:57:45 2021 +0100
+
+    Update
+
+[33mcommit 7502ba32fe173fa3165a58657fb9c7e5ad949aba[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 10 11:56:11 2021 +0100
+
+    trying to merge
+
+[33mcommit 8c17fe87960b42594c63855abd297031277b9d36[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 16:03:19 2021 +0100
+
+    merging
+
+[33mcommit 401d983929bdaac49ec32f0e039978975bfef6f8[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 16:00:55 2021 +0100
+
+    Removed simulations
+
+[33mcommit beae90ab22aaf6238b4eb86a69362239e1eb8c8e[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 15:57:52 2021 +0100
+
+    updated path
+
+[33mcommit 387b82b5e1442a4d3674b4e5bb65de77b90ce2d0[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 15:56:29 2021 +0100
+
+    updated path
+
+[33mcommit 072261c799cc400c12e85aa459ca11a09a46c9e1[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 15:54:54 2021 +0100
+
+    New ThreadTest
+
+[33mcommit ce0c1c2e3a1b0e7590be269129a9e0d4c6fdca39[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 15:52:09 2021 +0100
+
+    trying to merge
+
+[33mcommit 25bd6bea3c10fe91f658e0ee6688e9b96ff37e30[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Mar 4 15:48:15 2021 +0100
+
+    Jobbat hela dagen
+
+[33mcommit 9c67282f6f766c31991576b3ab2352d3ce3279ef[m
+Merge: be47567 3f6c5e2
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 12:58:00 2021 +0100
+
+    Merge branch 'jonas' of https://github.com/SaraR12/Master_Thesis into jonas
+
+[33mcommit be4756703e83a8372073d37974e08028329f04a1[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 12:57:34 2021 +0100
+
+    fixat
+
+[33mcommit 557eacc130d6f25ba1d0ad2c3582d12009616c3f[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 11:31:01 2021 +0100
+
+    updated
+
+[33mcommit 56ba2280a7ae1ffe2c7c39cb386b1cc33d739f57[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 11:28:23 2021 +0100
+
+    adding filterpy
+
+[33mcommit ba65c39768728424c41db9f1b5f1ddd98743ec48[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 11:27:45 2021 +0100
+
+    merging
+
+[33mcommit 07559d98a41d8e3a5def2e3dc26aab5865ae762a[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 11:27:02 2021 +0100
+
+    merging
+
+[33mcommit 3f6c5e25f04f7ac75689f4c37e9c38649522b35b[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Wed Mar 3 11:24:25 2021 +0100
+
+    Detection & mapping works
+
+[33mcommit 3ed0f7ba643aa24f0c4f5f75dd31e43b2a5c50c2[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Fri Feb 26 15:22:41 2021 +0100
+
+    Fridays work
+
+[33mcommit 65a5f1b23d88a61553e7ba2f35f3127b3960b33d[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Feb 25 15:00:26 2021 +0100
+
+    Checkar ut, puss hej
+
+[33mcommit 9d1805ead185d9770b282af4a8963c11d48e47a4[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Thu Feb 25 14:41:33 2021 +0100
+
+    Messing around with tracking
+
+[33mcommit 9be1fb0bf5176b431be92fa5286a21f445deb465[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Tue Feb 23 12:32:31 2021 +0100
+
+    Update
+
+[33mcommit ef6c9e996178974f6950baa4ae6777a2a0628947[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Feb 22 17:18:41 2021 +0100
+
+    new homographes
+
+[33mcommit f1e62305b5e874649feb09647a6a6612f24b742b[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Feb 22 17:13:47 2021 +0100
+
+    Måndagar...
+
+[33mcommit 351feddf44326140d58996eef96d5f9d05e6bfb3[m
+Merge: 62c11f1 0aa9279
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 17:06:56 2021 +0100
+
+    added
+
+[33mcommit 0aa927948a978d20a5f3b8537cfdf5e7fc1c89e6[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 17:05:27 2021 +0100
+
+    homographies
+
+[33mcommit 6ba801e26406b293612dd61b0e8ee12c29130399[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:50:09 2021 +0100
+
+    changed homographies
+
+[33mcommit 62c11f141517ffc140bd0bc66184ef0e44012a86[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:31:37 2021 +0100
+
+    deleted
+
+[33mcommit 517408bf2df79abdd3e44733cb51f00aba481c4f[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:29:30 2021 +0100
+
+    deleted stuff
+
+[33mcommit 6b26cc8d64ef2b18d24ded62a73cfa9651c5ba49[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:29:01 2021 +0100
+
+    added blender i ignore
+
+[33mcommit ec2e5740d874d0fa195721599983d2a183377cef[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:27:37 2021 +0100
+
+    lagt till och tagit bort
+
+[33mcommit d79e0b7270bd07e8951ff370c00917143a259641[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 16:22:22 2021 +0100
+
+    changed gitignore
+
+[33mcommit 5d5a8fb911ecb39ff8ed8e604d49cca03d5e23a4[m
+Author: Jonas Lindberg <jonas.lindberg@sigmatechnology.se>
+Date:   Mon Feb 22 15:58:35 2021 +0100
+
+    Started implementing Kalman Filter
+
+[33mcommit d558e80f097df0622c023aaebf307b2617db7b67[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 12:04:23 2021 +0100
+
+    removed blender
+
+[33mcommit f995352aef4ef8208883b72b9533e091cee2fe33[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 12:02:43 2021 +0100
+
+    removed blender
+
+[33mcommit c578b7f9237c18d238d479eca17efaef6dfba6b7[m
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Mon Feb 22 12:01:42 2021 +0100
+
+    blender
+
+[33mcommit 3e377f463bc30196bdaf3c641e80ea78d0b8760a[m
+Merge: ca0c1c2 3ed72dc
+Author: Sara Roth <saararoth@gmail.com>
+Date:   Fri Feb 19 10:50:36 2021 +0

@@ -1,12 +1,11 @@
 import cv2
-import numpy as np
 from deep_sort.deep_sort.sort.kalman_filter import *
 
-import math
 import sys, os
-sys.path.append(os.path.abspath(os.path.join('..', 'filterpy-master')))
-from filterpy.kalman.UKF import *
-from filterpy.kalman.sigma_points import MerweScaledSigmaPoints
+sys.path.append(os.path.abspath(os.path.join('..', 'GitHub/filterpy-master')))
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+from filterpy.kalman import *
+from filterpy.kalman import MerweScaledSigmaPoints
 #from filterpy.kalman.kalman_filter import *
 #from filterpy-master.filterpy.kalman.CubatureKalmanFilter import *
 
@@ -175,11 +174,12 @@ def association(filter_list, mean_list, measurement_list, class_list):
         distance = euclidean(mean, measurement_list)
         association_index = np.argmin(distance)
 
-        if distance[association_index] < 100:  # 65
+        if distance[association_index] < 90:  # 65
             associated_measurement_list.append(measurement_list[association_index])
             associated_classes.append(class_list[association_index])
         else:
             associated_measurement_list.append([])
+            associated_classes.append(class_list[association_index])
     """
     for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
         squared_maha = filter.gating_distance(mean, cov, measurement_matrix)

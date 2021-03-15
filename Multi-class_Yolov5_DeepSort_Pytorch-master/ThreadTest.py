@@ -7,6 +7,8 @@ from KalmanTracker import *
 import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
+import time
+
 
 ############################################## MAIN FILE ######################################################
 # Main file, run this file
@@ -101,6 +103,8 @@ def consumer():
     frame = 1
     plt.show()
 
+
+    prev_time = time.time()
     while i < 300:
 
         lenWN = len(qWNList)
@@ -113,6 +117,7 @@ def consumer():
 
         # Want to secure that all produces has produced something so we don't run on empty lists
         i = min(lenWN, lenMSW, lenNS, lenM, lenEN, lenME, lenWN2)
+        print(i)
         if i > 0:
             classesWN, classesMSW, classesNS, classesM, classesEN, classesME, classesWN2 = np.array([]), np.array([]), \
                                                                                             np.array([]),np.array([]), np.array([]), np.array([]), np.array([])
@@ -224,16 +229,15 @@ def consumer():
                     filter_listUKF, x_list = InitUKFTracker(bbox_xyah)
                     opticalflow_list = []
 
-                    for (id, bbox), cls in zip(enumerate(bbox_xyah), classlist_bbox):
-                        opticalflow_list.append(OpticalFlow(frame, id, bbox, cls))
+                    for (id, point), cls in zip(enumerate(x_list), classlist_bbox):
+                        opticalflow_list.append(OpticalFlow(frame, id, point, cls))
 
                 elif frame > 4:
+                    if frame == 31:
+                        print('Debug Stop')
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     heading_list = []
-                    for (id,bbox), cls, opflow in zip(enumerate(bbox_xyah), classlist_bbox, opticalflow_list):
-                        state = opflow(frame, id, bbox, cls)
-                        heading_list.append(state[0])
-                        print('state', state)
+
 
                     #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
                     filter_listUKF, x_list = predictUKFTracker(filter_listUKF, x_list)
@@ -246,6 +250,11 @@ def consumer():
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     #outputFiltered1.append(calculateCenterPoint(mean_list[0]))
 
+                    for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox, opticalflow_list):
+                        state = opflow(frame, id, point, cls)
+                        heading_list.append(state[0])
+                        print('state', state)
+
                     points_list = getSafetyZone(x_list,heading_list, classlist_bbox)
                     img2 = draw_bboxes(points_list, img2)
 
@@ -253,17 +262,22 @@ def consumer():
                     #img2 = drawFilterOutput(x_list, img2)
 
                 ######################################## SHOW RESULTS ######################################################
+                new_time = time.time()
+                fps = frame/(new_time - prev_time)     # FPS = 1/tid att köra
+                fps = round(fps,2)
                 print('Frame: ', frame)
+                cv2.putText(img,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
                 cv2.imshow('overview', img)
                 cv2.imshow('Intersected', img2)
 
                 # To step through frames
-                if cv2.waitKey(0) == 33:
-                    continue
+                """if cv2.waitKey(0) == 33:
+                    continue"""
+                cv2.waitKey(1)
                 frame += 1
                 if frame == 300:
                     for xy in output1:
-                        plt.plot(xy[0], xy[1 ])
+                        plt.plot(xy[0], xy[1])
                 ret, VIDEOFRAME = CAP.read()
                 VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 
