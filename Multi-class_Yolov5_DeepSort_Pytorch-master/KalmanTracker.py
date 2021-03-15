@@ -179,6 +179,7 @@ def association(filter_list, mean_list, measurement_list, class_list):
             associated_classes.append(class_list[association_index])
         else:
             associated_measurement_list.append([])
+            associated_classes.append(class_list[association_index])
     """
     for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
         squared_maha = filter.gating_distance(mean, cov, measurement_matrix)

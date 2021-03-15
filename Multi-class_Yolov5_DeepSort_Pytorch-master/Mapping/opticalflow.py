@@ -107,7 +107,10 @@ class OpticalFlow:
             heading_xy = math.atan(center_point_xy[1]/center_point_xy[0])
             heading_xy = math.degrees(heading_xy)
         else:
-            center_point_xy = (self.this_center_point - self.last_center_point)/frame_delta
+            try:
+                center_point_xy = (self.this_center_point - self.last_center_point)/frame_delta
+            except:
+                print('failing')
             heading_xy = math.atan(center_point_xy[1] / center_point_xy[0])
             heading_xy = math.degrees(heading_xy)
 
