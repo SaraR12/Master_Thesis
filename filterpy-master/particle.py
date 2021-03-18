@@ -152,10 +152,10 @@ for i in range(len(xMeasured)):
     yDiff.append((yMeasured[-i] - yTrue[-i]))
     Diff.append(math.sqrt((xTrue[-i] - xFiltered[-i])**2 + (yTrue[-i] - yFiltered[-i])**2))
 
-"""plt.plot(xMeasured, yMeasured, label='Measurements')
+plt.plot(xMeasured, yMeasured, label='Measurements')
 plt.plot(xFiltered, yFiltered, 'red', label='Filtered')
 plt.plot(xTrue, yTrue, 'black', label='True')
-plt.legend()"""
-plt.plot(range(len(xDiff)), xDiff)
-print(np.mean(Diff))
+plt.legend()
+"""plt.plot(range(len(xDiff)), xDiff)
+print(np.mean(Diff))"""
 plt.show()

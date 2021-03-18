@@ -84,38 +84,24 @@ class OpticalFlow:
 
         #### COMPUTATIONS ####
 
-        # Center point for last box
-        """last_box_center_x = self.last_BBOX[0] + self.last_BBOX[2]/2
-        last_box_center_y = self.last_BBOX[1] - self.last_BBOX[3]/2"""
-        #last_center_point_x = self.last_center_point[0]
-        #last_center_point_y = self.last_center_point[1]
-        #last_center_point = np.array([last_center_point_x, last_center_point_y])
-
-        # Center point for this box
-        """this_box_center_x = self.this_BBOX[0] + self.this_BBOX[2]/2
-        this_box_center_y = self.this_BBOX[1] - self.this_BBOX[3]/2"""
-        #this_center_point_x = self.this_center_point[0]
-        #this_center_point_y = self.this_center_point[1]
-        #this_center_point = np.array([this_box_center_x, this_box_center_y])
-
         # Frame delta
         frame_delta = self.frame - self.last_frame
 
         # Box delta in pixels/frame, vector of delta x and delta y 
         if frame_delta == 0:
-            center_point_xy = (self.this_center_point - self.last_center_point)
-            heading_xy = math.atan(center_point_xy[1]/center_point_xy[0])
+            center_point_change_xy = (self.this_center_point - self.last_center_point)
+            heading_xy = math.atan(center_point_change_xy[1]/center_point_change_xy[0])
             heading_xy = math.degrees(heading_xy)
         else:
             try:
-                center_point_xy = (self.this_center_point - self.last_center_point)/frame_delta
+                center_point_change_xy = (self.this_center_point - self.last_center_point)/frame_delta
             except:
                 print('failing')
-            heading_xy = math.atan(center_point_xy[1] / center_point_xy[0])
+            heading_xy = math.atan(center_point_change_xy[1] / center_point_change_xy[0])
             heading_xy = math.degrees(heading_xy)
 
             #state = [self.frame, self.id_b, -1, self.class_name, np.array([last_box_center_x, last_box_center_y]), np.array([this_box_center_x, this_box_center_y]), box_delta_xy]
-        state = [center_point_xy, heading_xy]
+        state = [center_point_change_xy, heading_xy]
         # state = [frame, id, camera ID = -1, class, np.array(prev_x prev_y), np.array(x, y), np.array(dx, dy)]
 
         self.last_frame = frame

@@ -5,11 +5,11 @@ def getSafetyZone(centerList, headingList, class_list):
     for center, heading, cls in zip(centerList, headingList, class_list):
         # Different size of bounding box depending on class
         if cls == 0:  # AGV
-            w = 50
-            h = 50
-        elif cls == 1: # Human
-            w = 30
-            h = 30
+            w = 60
+            h = 60
+        else: # cls == 1: # Human
+            w = 35
+            h = 35
         x = center[0]
         y = center[1]
 
@@ -22,50 +22,53 @@ def getSafetyZone(centerList, headingList, class_list):
         p3 = [x - w/2, y + h/2]  # BL
 
         # Difference in x and y
-        xheading = math.ceil(heading[0])
-        yheading = math.ceil(heading[1])
-        threshold = 4
+        #xheading = math.ceil(heading[0])
+        #yheading = math.ceil(heading[1])
+        xheading = heading[0]
+        yheading = heading[1]
+        threshold = 15
+        #threshold2 = 1
 
         if any(heading > 0) and cls == 0:
 
-            if abs(abs(xheading) - abs(yheading)) < threshold and all([xheading,yheading]):
+            if abs(abs(xheading) - abs(yheading)) < threshold and all([xheading, yheading]):
                 print('threshold', threshold)
                 if xheading > 0 and yheading > 0:
-                    p1[0] += xheading*4
-                    p2[0] += xheading*4
-                    p2[1] += yheading*4
-                    p3[1] += yheading*4
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
+                    p2[1] += round(yheading*4)
+                    p3[1] += round(yheading*4)
                 elif xheading > 0 and yheading < 0:
-                    p0[1] += yheading*4
-                    p1[1] += yheading*4
-                    p1[0] += xheading*4
-                    p2[0] += xheading*4
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
                 elif xheading < 0 and yheading < 0:
-                    p0[0] += xheading*4
-                    p0[1] += yheading*4
-                    p1[1] += yheading*4
-                    p3[0] += xheading*4
+                    p0[0] += round(xheading*4)
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
+                    p3[0] += round(xheading*4)
                 elif xheading < 0 and yheading > 0:
-                    p0[0] += xheading*4
-                    p3[0] += xheading*4
-                    p3[1] += yheading*4
-                    p2[1] += yheading*4
+                    p0[0] += round(xheading*4)
+                    p3[0] += round(xheading*4)
+                    p3[1] += round(yheading*4)
+                    p2[1] += round(yheading*4)
 
             elif abs(xheading) > abs(yheading):
                 if xheading > 0:
-                    p1[0] += xheading*4
-                    p2[0] += xheading*4
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
                 else:
-                    p0[0] += xheading*4
-                    p3[0] += xheading*4
+                    p0[0] += round(xheading*4)
+                    p3[0] += round(xheading*4)
 
             elif abs(yheading) > abs(xheading):
                 if yheading > 0:
-                    p2[1] += yheading*4
-                    p3[1] += yheading*4
+                    p2[1] += round(yheading*4)
+                    p3[1] += round(yheading*4)
                 else:
-                    p0[1] += yheading*4
-                    p1[1] += yheading*4
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
 
 
         #   p0, p1, p2, p3 = rect.rotate_rectangle(p0,p1,p2,p3,angle)

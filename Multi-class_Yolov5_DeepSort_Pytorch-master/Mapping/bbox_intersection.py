@@ -85,7 +85,7 @@ def draw_bboxes(bbox_list, img):
             pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
         cv2.polylines(img, [np.int32(pts)], True, (255, 0, 0), 2)
-        cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
+        #cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
 
         # Draw information window
         label = str('x = ' + str(centerX) + ' y = ' + str(centerY))
@@ -142,13 +142,18 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
             if p1.intersects(p2):
                 intersection = p1.intersection(p2)
 
-                intersection = intersection.exterior.coords.xy
-                intersected_bbox = []
-                for x,y in zip(intersection[0], intersection[1]):
-                    intersected_bbox.append([int(round(x)),int(round(y))])
-                intersected_bbox.pop(-1)
+                try:
+                    intersection = intersection.exterior.coords.xy
+                    intersected_bbox = []
+                    for x, y in zip(intersection[0], intersection[1]):
+                        intersected_bbox.append([int(round(x)), int(round(y))])
+                    intersected_bbox.pop(-1)
 
-                iou = areaOfPolygon(intersected_bbox) / areaBbx1
+                    iou = areaOfPolygon(intersected_bbox) / areaBbx1
+                except:
+                    print('Error')
+                    iou = 0
+
             else:
                 iou = 0
             # The intersection of two axis-aligned bounding boxes is always an

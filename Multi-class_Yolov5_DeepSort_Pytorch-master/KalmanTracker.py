@@ -22,7 +22,7 @@ def fx(x, dt):
                   [0, 0, 0, dt]])
     return np.dot(F, x)
 
-def InitUKFTracker(measurement_list):
+def InitUKFTracker(measurement_list, cls_list):
     points = MerweScaledSigmaPoints(n=4, alpha=0.001, beta=2, kappa=0)
 
     filter_list = []
@@ -31,7 +31,8 @@ def InitUKFTracker(measurement_list):
     number_of_objects = len(measurement_list)
 
     for i in range(number_of_objects):
-        filter_list.append(UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=1/24, hx=hx, fx=fx, points=points))
+        filter_list.append(UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=1/24, hx=hx, fx=fx, points=points,
+                                                 cls=cls_list[i], id=i))
 
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
         center = calculateCenterPoint(measurement)
@@ -45,15 +46,22 @@ def InitUKFTracker(measurement_list):
     return filter_list, x_list
 
 def predictUKFTracker(filter_list, x_list):
+    cls_list = []
+
     for i, filter in enumerate(filter_list):
-        filter.predict()
+        try:
+            filter.predict()
+        except:
+            print('naii')
 
         x_list[i] = filter.x
-    return filter_list, x_list
+        cls_list.append(filter.cls)
+
+    return filter_list, x_list,cls_list
 
 def updateUKFTracker(filter_list, x_list, measurement_list):
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
-        if measurement != []:
+        if measurement != []: #[]:
 
             center = calculateCenterPoint(measurement)
 
@@ -117,70 +125,44 @@ def drawFilterOutput(xyah, frame):
         cv2.putText(frame, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)"""
     return frame
 
-def InitKalmanTracker(measurement_list):
-    filter_list = []
-    mean_list = []
-    covariance_list = []
-
-    number_of_objects = len(measurement_list)
-
-    for i in range(number_of_objects):
-        filter_list.append(KalmanFilter())
-
-    for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
-        mean, cov = filter.initiate(measurement)
-
-        mean_list.append(mean)
-        covariance_list.append(cov)
-
-    return filter_list, mean_list, covariance_list
-
-def predictKalmanTracker(filter_list, mean_list, cov_list):
-    for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
-        meanP, covP = filter.predict(mean, cov)
-
-        mean_list[i] = meanP
-        cov_list[i] = covP
-    return filter_list, mean_list, cov_list
-
-def updateKalmanTracker(filter_list, mean_list, cov_list, measurement_list):
-    for (i, filter), mean, cov, measurement in zip(enumerate(filter_list), mean_list, cov_list, measurement_list):
-        if measurement != []:
-            meanU, covU = filter.update(mean, cov, measurement)
-
-            mean_list[i] = meanU
-            cov_list[i] = covU
-        else:
-            cov_list[i] = cov
-            mean_list[i] = mean
-    return filter_list, mean_list, cov_list
-
-def projectKalmanTracker(filter_list, mean_list, cov_list):
-    for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
-        meanI, covI = filter.project(mean, cov)
-        mean_list[i] = meanI
-        cov_list[i] = covI
-    return mean_list, cov_list
-
 def association(filter_list, mean_list, measurement_list, class_list):
     # Measurement preprocessing:
-    N = len(measurement_list)
-    measurement_matrix = np.reshape(measurement_list, (N,4))
+    nbr_measurements = len(measurement_list)
+    nbr_trackers = len(filter_list)
 
-    associated_measurement_list = []
+    associated_measurement_list = [[] for i in range(nbr_trackers)]#np.zeros((1,N))
+    associated_measurement_matrix = []
     associated_classes = []
+    associated_filter_list = []
+    counter = 0
+    for mean in mean_list:
+        distance = euclidean(mean, measurement_list)
+        associated_measurement_matrix.append(distance)
 
+    associated_measurement_matrix = np.reshape(associated_measurement_matrix,(nbr_trackers, nbr_measurements))
+
+    for i in range(nbr_measurements):
+        col = associated_measurement_matrix[:,i]
+        association_index = np.argmin(col)
+        distance_between_state_measurement = col[association_index]
+        if distance_between_state_measurement < 100:
+            associated_measurement_list[association_index] = measurement_list[i]
+
+
+
+    """
     for (i, filter), mean in zip(enumerate(filter_list), mean_list):
         distance = euclidean(mean, measurement_list)
         association_index = np.argmin(distance)
 
-        if distance[association_index] < 90:  # 65
+        if distance[association_index] < 70:
             associated_measurement_list.append(measurement_list[association_index])
-            associated_classes.append(class_list[association_index])
+            #associated_classes.append(class_list[association_index])
         else:
             associated_measurement_list.append([])
-            associated_classes.append(class_list[association_index])
-    """
+            #associated_classes.append(class_list[counter])
+        counter += 1
+
     for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
         squared_maha = filter.gating_distance(mean, cov, measurement_matrix)
         association_index = np.argmin(squared_maha)
@@ -188,7 +170,7 @@ def association(filter_list, mean_list, measurement_list, class_list):
             associated_measurement_list.append(measurement_list[association_index])
         else:
             associated_measurement_list.append([])"""
-    return associated_measurement_list, associated_classes
+    return associated_measurement_list #, associated_classes
 
 
 def euclidean(mean, measurement_list):

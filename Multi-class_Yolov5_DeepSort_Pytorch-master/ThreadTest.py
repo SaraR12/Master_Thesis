@@ -24,7 +24,7 @@ qWN2List = []
 
 # Create functions for running each camera. One list q for each camera
 def trackerCamWN(path):
-    camera = 'WN'
+    camera = '1'
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qWNList.append([i])
@@ -42,7 +42,7 @@ def trackerCamNS(path):
         qNSList.append([i])
 
 def trackerCamM(path):
-    camera = 'M'
+    camera = '2'
     out = trackNoDeepSort.run(path, camera)
     for i in out:
         qMList.append([i])
@@ -74,7 +74,7 @@ def consumer():
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (1788, 1069))
 
     # Get all the homographies to the different cameras
-    pts_src, pts_dst = getKeypoints('WN')
+    pts_src, pts_dst = getKeypoints('1')
     mapObjWN = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("MSW")
@@ -83,7 +83,7 @@ def consumer():
     pts_src, pts_dst = getKeypoints("NS")
     mapObjNS = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("M")
+    pts_src, pts_dst = getKeypoints("2")
     mapObjM = Mapper(PLANE, pts_src, pts_dst)
 
     pts_src, pts_dst = getKeypoints("EN")
@@ -106,7 +106,8 @@ def consumer():
 
     prev_time = time.time()
     while i < 300:
-
+        if frame == 31:
+            print('STOP')
         lenWN = len(qWNList)
         lenMSW = len(qMSWList)
         lenNS = len(qNSList)
@@ -226,23 +227,23 @@ def consumer():
 
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     #filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
-                    filter_listUKF, x_list = InitUKFTracker(bbox_xyah)
+                    filter_listUKF, x_list, = InitUKFTracker(bbox_xyah, classlist_bbox)
                     opticalflow_list = []
 
                     for (id, point), cls in zip(enumerate(x_list), classlist_bbox):
                         opticalflow_list.append(OpticalFlow(frame, id, point, cls))
 
                 elif frame > 4:
-                    if frame == 31:
-                        print('Debug Stop')
+                    if frame == 14:
+                        print('hej')
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     heading_list = []
 
 
                     #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
-                    filter_listUKF, x_list = predictUKFTracker(filter_listUKF, x_list)
+                    filter_listUKF, x_list,classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
 
-                    bbox_xyah, classlist_bbox = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
+                    bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
 
                     #output1.append(calculateCenterPoint(bbox_xyah[0]))
 
@@ -250,25 +251,30 @@ def consumer():
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     #outputFiltered1.append(calculateCenterPoint(mean_list[0]))
 
-                    for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox, opticalflow_list):
+                    for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox_test, opticalflow_list):
                         state = opflow(frame, id, point, cls)
                         heading_list.append(state[0])
-                        print('state', state)
+                        cv2.circle(img2, (int(point[0]), int(point[1])), 1, (0,0,255), 2)
 
-                    points_list = getSafetyZone(x_list,heading_list, classlist_bbox)
+                    points_list = getSafetyZone(x_list, heading_list, classlist_bbox_test)
                     img2 = draw_bboxes(points_list, img2)
+                    cv2.imshow('overview', img)
+                    cv2.imshow('Intersected', img2)
+                    print('Filtered state: ', x_list[4])
+                    print('Calculated heading', heading_list[4])
+
 
                     # Draw filter outputs
                     #img2 = drawFilterOutput(x_list, img2)
 
                 ######################################## SHOW RESULTS ######################################################
                 new_time = time.time()
-                fps = frame/(new_time - prev_time)     # FPS = 1/tid att köra
+                fps = frame/(new_time - prev_time)
                 fps = round(fps,2)
                 print('Frame: ', frame)
                 cv2.putText(img,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
-                cv2.imshow('overview', img)
-                cv2.imshow('Intersected', img2)
+                #cv2.imshow('overview', img)
+                #cv2.imshow('Intersected', img2)
 
                 # To step through frames
                 """if cv2.waitKey(0) == 33:
@@ -291,10 +297,10 @@ if __name__ == '__main__':
     qWN2 = queue.Queue()
 
     # Producers
-    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
+    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/Video1.mkv',), daemon=True).start() #1
     threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
     threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
-    threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
+    threadCamM = threading.Thread(target=trackerCamM, args=('videos/Video2.mkv',), daemon=True).start() #4
     threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start() #5
     threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start() # 6
     threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/VideoMW.mkv',), daemon=True).start()  # 7
