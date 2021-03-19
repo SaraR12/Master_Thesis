@@ -70,6 +70,7 @@ def draw_bboxes(bbox_list, img):
     Output: img: Image with the boundingboxes on
     '''
     h, w, _ = img.shape
+    empty_img = np.zeros((h,w,3), dtype=np.int32)
 
     # Convert pixels to meter
     scale_x = 50 / 1788
@@ -78,13 +79,16 @@ def draw_bboxes(bbox_list, img):
     for bbox in bbox_list:
         center = bbox[-2]
         centerX = round(scale_x * center[0], 3)
+        centerX = round(scale_x * center[0], 3)
         centerY = round((1069 - center[1]) * scale_y, 3)
 
         pts = np.array([])
         for i in range(len(bbox) - 1):
             pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
-        cv2.polylines(img, [np.int32(pts)], True, (255, 0, 0), 2)
+        #cv2.polylines(img, [np.int32(pts)], True, (0, 0,255), 2)
+        cv2.fillPoly(empty_img, [np.int32(pts)], (255,0,0))
+        img = cv2.addWeighted(img, 0.5, empty_img, 0.5, 1.0)
         #cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
 
         # Draw information window
