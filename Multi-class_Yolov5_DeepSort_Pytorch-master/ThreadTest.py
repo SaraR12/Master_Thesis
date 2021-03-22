@@ -241,15 +241,10 @@ def consumer():
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     heading_list = []
 
-
-                    #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
                     filter_listUKF, x_list,classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
 
                     bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
 
-                    #output1.append(calculateCenterPoint(bbox_xyah[0]))
-
-                    #filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
 
@@ -267,7 +262,7 @@ def consumer():
                     cv2.imshow("Heatmap", heatmapshow)
 
                     points_list = getSafetyZone(x_list, heading_list, classlist_bbox_test,heatmap)
-                    img2 = draw_bboxes(points_list, img2)
+                    img2 = draw_bboxes(points_list, img2, filter_listUKF)
 
 
                 new_time = time.time()

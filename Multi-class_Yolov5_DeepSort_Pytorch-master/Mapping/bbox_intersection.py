@@ -62,7 +62,7 @@ def draw_multiple_boxes(bbox_list, mapping_objects, classes_list, cam_id_list, i
 
     return img
 
-def draw_bboxes(bbox_list, img):
+def draw_bboxes(bbox_list, img, filter_list):
     '''
     Input:  bbox_list: 2D list of bboxes
             img: Image to draw on
@@ -76,6 +76,7 @@ def draw_bboxes(bbox_list, img):
     scale_x = 50 / 1788
     scale_y = 30 / 1069
 
+    j = -1
     for bbox in reversed(bbox_list):
         center = bbox[-2]
         color = bbox[-1]
@@ -100,6 +101,10 @@ def draw_bboxes(bbox_list, img):
                         [0, 0, 0], 1)
             cv2.putText(img, str('y = ' + str(centerY)), (x, y - t_size[1] - 4), cv2.FONT_HERSHEY_PLAIN, 1,
                         [0, 0, 0], 1)
+
+            cv2.putText(img, str('ID ' + str(filter_list[j].id)), (x, y - 3 * t_size[1] - 12), cv2.FONT_HERSHEY_PLAIN, 1,
+                        [0, 0, 0], 1)
+            j -= 1
 
     img = cv2.addWeighted(img, 0.8, empty_img, 0.2, 1.0)
     return img
