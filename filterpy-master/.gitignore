@@ -24,3 +24,4 @@ filterpy/inprogress.py
 */__pycache__/*
 *.pyc
 *.py[cod]
+__pycache__/
