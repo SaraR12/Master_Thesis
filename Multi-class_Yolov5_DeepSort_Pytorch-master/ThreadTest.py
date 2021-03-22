@@ -4,6 +4,7 @@ from Mapping.bbox_intersection import *
 from Mapping.opticalflow import *
 from homographies import *
 from KalmanTracker import *
+from CollisionAvoidance.heatmap import HeatMap
 import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
@@ -105,9 +106,10 @@ def consumer():
 
 
     prev_time = time.time()
+    heatmap_obj = HeatMap(VIDEOFRAME, timesteps=20)
+
     while i < 300:
-        if frame == 31:
-            print('STOP')
+
         lenWN = len(qWNList)
         lenMSW = len(qMSWList)
         lenNS = len(qNSList)
@@ -249,32 +251,33 @@ def consumer():
 
                     #filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
-                    #outputFiltered1.append(calculateCenterPoint(mean_list[0]))
+                    heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
 
                     for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox_test, opticalflow_list):
                         state = opflow(frame, id, point, cls)
                         heading_list.append(state[0])
                         cv2.circle(img2, (int(point[0]), int(point[1])), 1, (0,0,255), 2)
 
-                    points_list = getSafetyZone(x_list, heading_list, classlist_bbox_test)
+                    ######################################## SHOW RESULTS ######################################################
+                    #cv2.imshow('heatmap', heatmap)
+                    heatmapshow = None
+                    heatmapshow = cv2.normalize(heatmap, heatmapshow, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX,
+                                                dtype=cv2.CV_8U)
+                    heatmapshow = cv2.applyColorMap(heatmapshow, cv2.COLORMAP_TURBO)
+                    cv2.imshow("Heatmap", heatmapshow)
+
+                    points_list = getSafetyZone(x_list, heading_list, classlist_bbox_test,heatmap)
                     img2 = draw_bboxes(points_list, img2)
-                    cv2.imshow('overview', img)
-                    cv2.imshow('Intersected', img2)
-                    print('Filtered state: ', x_list[4])
-                    print('Calculated heading', heading_list[4])
 
 
-                    # Draw filter outputs
-                    #img2 = drawFilterOutput(x_list, img2)
-
-                ######################################## SHOW RESULTS ######################################################
                 new_time = time.time()
                 fps = frame/(new_time - prev_time)
                 fps = round(fps,2)
                 print('Frame: ', frame)
-                cv2.putText(img,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
-                #cv2.imshow('overview', img)
-                #cv2.imshow('Intersected', img2)
+                cv2.putText(img2,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
+                cv2.imshow('overview', img)
+                cv2.imshow('Intersected', img2)
+
 
                 # To step through frames
                 """if cv2.waitKey(0) == 33:

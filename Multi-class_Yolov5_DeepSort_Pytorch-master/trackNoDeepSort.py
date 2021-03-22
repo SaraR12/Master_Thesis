@@ -238,8 +238,6 @@ def detect(opt, device,camera, queue=None, save_img=False):
                     mappedImg, _ = mapper.mapFromBoundingBox(x1, y1, x2, y2, (0,0,255))
 
                     if True: #save_img or view_img:  # Add bbox to image
-                        if frame == 30:
-                            print('STOP')
                         label = '%s %.2f' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                 #cv2.imshow('Yolo', im0)
@@ -285,8 +283,8 @@ def detect(opt, device,camera, queue=None, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            """   """
-            """if cv2.waitKey(0) == 33:
+            """   
+            if cv2.waitKey(0) == 33:
                 continue"""
             # Stream results
             if True:
