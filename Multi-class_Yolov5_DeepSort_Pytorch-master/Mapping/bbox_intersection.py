@@ -70,15 +70,15 @@ def draw_bboxes(bbox_list, img):
     Output: img: Image with the boundingboxes on
     '''
     h, w, _ = img.shape
-    empty_img = np.zeros((h,w,3), dtype=np.int32)
+    empty_img = img.copy()
 
     # Convert pixels to meter
     scale_x = 50 / 1788
     scale_y = 30 / 1069
 
-    for bbox in bbox_list:
+    for bbox in reversed(bbox_list):
         center = bbox[-2]
-        centerX = round(scale_x * center[0], 3)
+        color = bbox[-1]
         centerX = round(scale_x * center[0], 3)
         centerY = round((1069 - center[1]) * scale_y, 3)
 
@@ -86,23 +86,22 @@ def draw_bboxes(bbox_list, img):
         for i in range(len(bbox) - 1):
             pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
-        #cv2.polylines(img, [np.int32(pts)], True, (0, 0,255), 2)
-        cv2.fillPoly(empty_img, [np.int32(pts)], (255,0,0))
-        img = cv2.addWeighted(img, 0.5, empty_img, 0.5, 1.0)
-        #cv2.circle(img, (np.int32(center[0]), np.int32(center[1])),2, (255,0,0),2)
+        cv2.fillPoly(empty_img, [np.int32(pts)], color)
 
         # Draw information window
-        label = str('x = ' + str(centerX) + ' y = ' + str(centerY))
-        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
+        if color == (0,0,255):
+            label = str('x = ' + str(centerX) + ' y = ' + str(centerY))
+            t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
 
-        x = round(bbox[0][0])
-        y = round(bbox[0][1])
+            x = round(bbox[0][0])
+            y = round(bbox[0][1])
 
-        cv2.putText(img, str('x = ' + str(centerX)), (x, y - 2 * t_size[1] - 8), cv2.FONT_HERSHEY_PLAIN, 1,
-                    [0, 0, 0], 1)
-        cv2.putText(img, str('y = ' + str(centerY)), (x, y - t_size[1] - 4), cv2.FONT_HERSHEY_PLAIN, 1,
-                    [0, 0, 0], 1)
+            cv2.putText(img, str('x = ' + str(centerX)), (x, y - 2 * t_size[1] - 8), cv2.FONT_HERSHEY_PLAIN, 1,
+                        [0, 0, 0], 1)
+            cv2.putText(img, str('y = ' + str(centerY)), (x, y - t_size[1] - 4), cv2.FONT_HERSHEY_PLAIN, 1,
+                        [0, 0, 0], 1)
 
+    img = cv2.addWeighted(img, 0.8, empty_img, 0.2, 1.0)
     return img
 
 ############################### INTERSECTION ###############################

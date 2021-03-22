@@ -109,8 +109,7 @@ def consumer():
     heatmap_obj = HeatMap(VIDEOFRAME, timesteps=20)
 
     while i < 300:
-        if frame == 31:
-            print('STOP')
+
         lenWN = len(qWNList)
         lenMSW = len(qMSWList)
         lenNS = len(qNSList)
@@ -275,7 +274,7 @@ def consumer():
                 fps = frame/(new_time - prev_time)
                 fps = round(fps,2)
                 print('Frame: ', frame)
-                cv2.putText(img,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
+                cv2.putText(img2,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
                 cv2.imshow('overview', img)
                 cv2.imshow('Intersected', img2)
 
