@@ -9,6 +9,7 @@ import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
 import time
+from Mapping.positioning_evaluation import filtered_positions
 
 
 ############################################## MAIN FILE ######################################################
@@ -223,40 +224,35 @@ def consumer():
                 img2 = VIDEOFRAME
                 #################################### KALMAN FILTERING ######################################################
 
-                if frame == 4:
+                if frame == 1:
                     output1.append(measurements[0][-2])
 
 
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     #filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
-                    filter_listUKF, x_list, = InitUKFTracker(bbox_xyah, classlist_bbox)
+                    filter_listUKF, x_list = InitUKFTracker(bbox_xyah, classlist_bbox)
+                    filtered_positions(x_list, frame)
                     opticalflow_list = []
 
                     for (id, point), cls in zip(enumerate(x_list), classlist_bbox):
                         opticalflow_list.append(OpticalFlow(frame, id, point, cls))
 
-                elif frame > 4:
-                    if frame == 14:
-                        print('hej')
+                elif frame > 1:
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     heading_list = []
 
-
-                    #filter_list, mean_list, covariance_list = predictKalmanTracker(filter_list, mean_list, covariance_list)
                     filter_listUKF, x_list,classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
 
                     bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
 
-                    #output1.append(calculateCenterPoint(bbox_xyah[0]))
-
-                    #filter_list, mean_list, covariance_list = updateKalmanTracker(filter_list, mean_list, covariance_list, bbox_xyah)
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
 
                     for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox_test, opticalflow_list):
                         state = opflow(frame, id, point, cls)
                         heading_list.append(state[0])
-                        cv2.circle(img2, (int(point[0]), int(point[1])), 1, (0,0,255), 2)
+
+                    filtered_positions(x_list, frame)
 
                     ######################################## SHOW RESULTS ######################################################
                     #cv2.imshow('heatmap', heatmap)
