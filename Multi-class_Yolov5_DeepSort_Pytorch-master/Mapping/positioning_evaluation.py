@@ -1,4 +1,4 @@
-from groundTruth import getGroundTruth
+from groundTruth import getGroundTruthEvaluation
 import math
 import matplotlib.pyplot as plt
 
@@ -7,9 +7,11 @@ def pixel_to_meter(state):
     return [state[0]*50/1788, (1069 - state[1]) * 30/1069]
 
 # Get the true position
-AGV1Meter, AGV2Meter, AGV3Meter, AGV4Meter, Human1, Human2 = getGroundTruth()
-true_position_list = [AGV2Meter, AGV1Meter, Human1, AGV4Meter, AGV3Meter, Human2]
-names_list = ['AGV2Meter', 'AGV1Meter', 'Human1', 'AGV4Meter', 'AGV3Meter', 'Human2']
+AGV1Meter, AGV2Meter, AGV3Meter, AGV4Meter, AGV5Meter = getGroundTruthEvaluation()
+true_position_list = [AGV1Meter, AGV2Meter, AGV3Meter, AGV4Meter, AGV5Meter]
+#true_position_list = [AGV2Meter, AGV1Meter, Human1, AGV4Meter, AGV3Meter, Human2]
+names_list = ['AGV1Meter', 'AGV2Meter', 'AGV3Meter', 'AGV4Meter', 'AGV5Meter']
+#names_list = ['AGV2Meter', 'AGV1Meter', 'Human1', 'AGV4Meter', 'AGV3Meter', 'Human2']
 # Get the filtered position
 def filtered_positions(states, frame):
     for state, truth, names in zip(states, true_position_list, names_list):

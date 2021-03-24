@@ -9,7 +9,7 @@ import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
 import time
-
+from Mapping.positioning_evaluation import filtered_positions
 
 ############################################## MAIN FILE ######################################################
 # Main file, run this file
@@ -219,7 +219,7 @@ def consumer():
                 # Map the projected bboxes, intersect and plot them
                 bbox_all_list = map_bboxes(bbox_list, mapping_objects, classes_list)
                 intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
-                img2 = draw_bboxesTEMP(intersected_bboxes, VIDEOFRAME)
+                #img2 = draw_bboxesTEMP(intersected_bboxes, VIDEOFRAME)
                 cv2.imshow('Intersected', img2)
                 #################################### KALMAN FILTERING ######################################################
 
@@ -246,6 +246,7 @@ def consumer():
                     bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
 
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
+                    filtered_positions(x_list, frame)
                     heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
 
                     for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox_test, opticalflow_list):
