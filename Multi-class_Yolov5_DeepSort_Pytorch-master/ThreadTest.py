@@ -9,6 +9,7 @@ import trackNoDeepSort
 import matplotlib.pyplot as plt
 from CollisionAvoidance.safety_zone import getSafetyZone
 import time
+from Mapping.positioning_evaluation import filtered_positions
 
 
 ############################################## MAIN FILE ######################################################
@@ -247,6 +248,7 @@ def consumer():
 
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
+                    filtered_positions(x_list, frame)
 
                     for (id, point), cls, opflow in zip(enumerate(x_list), classlist_bbox_test, opticalflow_list):
                         state = opflow(frame, id, point, cls)
