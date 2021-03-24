@@ -4,7 +4,8 @@ from shapely.geometry import Polygon
 
 
 CLASSES = ['AGV', 'Human']
-CAMERAS = ['','WN', 'MSW', 'NS', 'M', 'EN', 'ME', 'WN2', 'MW']
+CAMERAS = ['','BL', 'ML', 'MM', 'MR', 'TL', 'TR']
+#CAMERAS = ['','WN', 'MSW', 'NS', 'M', 'EN', 'ME', 'WN2', 'MW']
 
 ############################## POLYGON AREA ##############################
 def areaOfPolygon(p):
@@ -62,7 +63,7 @@ def draw_multiple_boxes(bbox_list, mapping_objects, classes_list, cam_id_list, i
 
     return img
 
-def draw_bboxes(bbox_list, img):
+def draw_bboxesTEMP(bbox_list, img):
     '''
     Input:  bbox_list: 2D list of bboxes
             img: Image to draw on
@@ -76,6 +77,35 @@ def draw_bboxes(bbox_list, img):
     scale_x = 50 / 1788
     scale_y = 30 / 1069
 
+    j = -1
+    for bbox in reversed(bbox_list):
+        center = bbox[-2]
+        centerX = round(scale_x * center[0], 3)
+        centerY = round((1069 - center[1]) * scale_y, 3)
+
+        pts = np.array([])
+        for i in range(len(bbox) - 1):
+            pts = np.append(pts, np.round(bbox[i]))
+        pts = pts.reshape((-1, 1, 2))
+        cv2.polylines(empty_img, [np.int32(pts)],True, (255,0,0))
+
+    return empty_img
+
+def draw_bboxes(bbox_list, img, filter_list):
+    '''
+    Input:  bbox_list: 2D list of bboxes
+            img: Image to draw on
+
+    Output: img: Image with the boundingboxes on
+    '''
+    h, w, _ = img.shape
+    empty_img = img.copy()
+
+    # Convert pixels to meter
+    scale_x = 50 / 1788
+    scale_y = 30 / 1069
+
+    j = -1
     for bbox in reversed(bbox_list):
         center = bbox[-2]
         color = bbox[-1]
@@ -100,6 +130,10 @@ def draw_bboxes(bbox_list, img):
                         [0, 0, 0], 1)
             cv2.putText(img, str('y = ' + str(centerY)), (x, y - t_size[1] - 4), cv2.FONT_HERSHEY_PLAIN, 1,
                         [0, 0, 0], 1)
+
+            cv2.putText(img, str('ID ' + str(filter_list[j].id)), (x, y - 3 * t_size[1] - 12), cv2.FONT_HERSHEY_PLAIN, 1,
+                        [0, 0, 0], 1)
+            j -= 1
 
     img = cv2.addWeighted(img, 0.8, empty_img, 0.2, 1.0)
     return img
@@ -187,17 +221,23 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
         intersected_bbox = []
 
         if index in available_bboxes:
-            intersected_bbox.append(index)
-            available_bboxes.remove(index)
-            class_bbox = classes_list[index]
+
+            if iou_matrix[index,:].tolist().count(-1) < 2:
+                intersected_bbox.append(index)
+                available_bboxes.remove(index)
+                class_bbox = classes_list[index]
+                end = False
+
+                if class_bbox == 2:
+                    class_bbox = 0
+                elif class_bbox == 3:
+                    class_bbox = 1
+            else:
+                end = True
 
 
-            if class_bbox == 2:
-                class_bbox = 0
-            elif class_bbox == 3:
-                class_bbox = 1
 
-            end = False
+
             switcher = 0  # Switch between row/column search
 
             while not end:
@@ -213,7 +253,7 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                     i = 1
                     while loop_flag:  # Search for a candidate with the most iou overlapping
                         iou_value = np.partition(iou_matrix[currentIndex,:].flatten(), -i)[-i]
-                        if i > 4:
+                        if i > 7:
                             print('WARNING1')
 
                         index = np.where(iou_matrix[currentIndex,:] == iou_value)[-1]
@@ -249,7 +289,7 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                     loop_flag = True
                     while loop_flag:  # Search for a candidate with the most iou overlapping
                         iou_value = np.partition(iou_matrix[:, currentIndex].flatten(), -i)[-i]
-                        if i > 4:
+                        if i > 7:
                             print('WARNING2')
                         if iou_value == 0:
                             loop_flag = False
@@ -275,8 +315,9 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                                 else:
                                     i += 1
 
-            intersecting_bboxes.append(intersected_bbox)
-            cls_list.append(class_bbox)
+            if intersected_bbox != [] and class_bbox != []:
+                intersecting_bboxes.append(intersected_bbox)
+                cls_list.append(class_bbox)
     return intersecting_bboxes, cls_list
 
 def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class_list):
