@@ -1,6 +1,6 @@
 import math
 
-def getSafetyZone(centerList, headingList, class_list, heatmap):
+def getSafetyZone(centerList, headingList, class_list, heatmap=None):
     points_list = []
     for center, heading, cls in zip(centerList, headingList, class_list):
         # Different size of bounding box depending on class
@@ -42,7 +42,7 @@ def getSafetyZone(centerList, headingList, class_list, heatmap):
         #xheading = math.ceil(heading[0])
         #yheading = math.ceil(heading[1])
 
-        safetyFactor = heatmap[round(center[1]), round(center[0])]
+        #safetyFactor = heatmap[round(center[1]), round(center[0])]
 
 
         #threshold2 = 1

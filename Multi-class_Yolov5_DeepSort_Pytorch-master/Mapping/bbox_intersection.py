@@ -4,13 +4,14 @@ from shapely.geometry import Polygon
 
 
 CLASSES = ['AGV', 'Human']
-CAMERAS = ['','BL', 'ML', 'MM', 'MR', 'TL', 'TR']
+CAMERAS = ['','BL', 'ML', 'MM', 'MR', 'TL', 'TR', 'CS']
 #CAMERAS = ['','WN', 'MSW', 'NS', 'M', 'EN', 'ME', 'WN2', 'MW']
 
 ############################## POLYGON AREA ##############################
 def areaOfPolygon(p):
     return 0.5 * abs(sum(x0*y1 - x1*y0
                          for ((x0, y0), (x1, y1)) in segments(p)))
+
 def segments(p):
     return zip(p, p[1:] + [p[0]])
 
@@ -148,7 +149,7 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
 
     Output: iou_matrix: NxN matrix with IoU-value
     '''
-    bbox_list = bbox_to_coords(bbox_list, mapObjects_list, camera_id_list)
+    #bbox_list = bbox_to_coords(bbox_list, mapObjects_list, camera_id_list)
     iou_matrix = np.zeros((len(bbox_list), len(bbox_list)))
 
     for i, bbox in enumerate(bbox_list):
@@ -156,25 +157,28 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
         bb1yTL = bbox[1]
         bb1xTR = bbox[2]
         bb1yTR = bbox[3]
-        bb1xBL = bbox[4]
-        bb1yBL = bbox[5]
-        bb1xBR = bbox[6]
-        bb1yBR = bbox[7]
+        bb1xBR = bbox[4]
+        bb1yBR = bbox[5]
+        bb1xBL = bbox[6]
+        bb1yBL = bbox[7]
         p1 = Polygon([(bb1xTL, bb1yTL), (bb1xTR, bb1yTR), (bb1xBR, bb1yBR), (bb1xBL, bb1yBL)])
 
         areaBbx1 = areaOfPolygon([[bb1xTL, bb1yTL], [bb1xTR, bb1yTR], [bb1xBR, bb1yBR], [bb1xBL, bb1yBL]])
         # determine the coordinates of the intersection rectangle
 
         for j, candidate in enumerate(bbox_list):
-            bb2xTL = candidate[0]
+            try:
+                bb2xTL = candidate[0]
+            except:
+                print('naii')
             bb2yTL = candidate[1]
             bb2xTR = candidate[2]
             bb2yTR = candidate[3]
-            bb2xBL = candidate[4]
-            bb2yBL = candidate[5]
-            bb2xBR = candidate[6]
-            bb2yBR = candidate[7]
-            p2 = Polygon([(bb2xTL, bb2yTL), (bb2xTR, bb2yTR), (bb2xBR, bb2yBR), (bb2xBL, bb2yBL)])
+            bb2xBR = candidate[4]
+            bb2yBR = candidate[5]
+            bb2xBL = candidate[6]
+            bb2yBL = candidate[7]
+            p2 = Polygon([(bb2xTL, bb2yTL), (bb2xTR, bb2yTR), (bb2xBR, bb2yBR), (bb2xBL, bb2yBL), (bb2xTL, bb2yTL)])
 
             if p1.intersects(p2):
                 intersection = p1.intersection(p2)
@@ -185,23 +189,25 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
                     for x, y in zip(intersection[0], intersection[1]):
                         intersected_bbox.append([int(round(x)), int(round(y))])
                     intersected_bbox.pop(-1)
+                    areaBbox2 = areaOfPolygon(intersected_bbox)
 
-                    iou = areaOfPolygon(intersected_bbox) / areaBbx1
+                    iou = areaBbox2 / areaBbx1
                 except:
                     print('Error')
                     iou = 0
-
             else:
                 iou = 0
             # The intersection of two axis-aligned bounding boxes is always an
             # axis-aligned bounding box
 
-            if iou == 1:
+            if iou == 1 and i != j:
+                iou_matrix[i,j] = 0.999
+            elif iou == 1:
                 iou_matrix[i,j] = -1
             else:
                 iou_matrix[i, j] = iou
-
     return iou_matrix
+
 
 def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list):
     '''
@@ -222,21 +228,16 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
 
         if index in available_bboxes:
 
-            if iou_matrix[index,:].tolist().count(-1) < 2:
-                intersected_bbox.append(index)
-                available_bboxes.remove(index)
-                class_bbox = classes_list[index]
-                end = False
+            #if iou_matrix[index,:].tolist().count(-1) < 2:
+            intersected_bbox.append(index)
+            available_bboxes.remove(index)
+            class_bbox = classes_list[index]
+            end = False
 
-                if class_bbox == 2:
-                    class_bbox = 0
-                elif class_bbox == 3:
-                    class_bbox = 1
-            else:
-                end = True
-
-
-
+            if class_bbox == 2:
+                class_bbox = 0
+            elif class_bbox == 3:
+                class_bbox = 1
 
             switcher = 0  # Switch between row/column search
 
@@ -252,7 +253,10 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
 
                     i = 1
                     while loop_flag:  # Search for a candidate with the most iou overlapping
-                        iou_value = np.partition(iou_matrix[currentIndex,:].flatten(), -i)[-i]
+                        try:
+                            iou_value = np.partition(iou_matrix[currentIndex,:].flatten(), -i)[-i]
+                        except:
+                            iou_value = 0
                         if i > 7:
                             print('WARNING1')
 
@@ -288,7 +292,10 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                     i = 1
                     loop_flag = True
                     while loop_flag:  # Search for a candidate with the most iou overlapping
-                        iou_value = np.partition(iou_matrix[:, currentIndex].flatten(), -i)[-i]
+                        try:
+                            iou_value = np.partition(iou_matrix[:, currentIndex].flatten(), -i)[-i]
+                        except:
+                            iou_value = 0
                         if i > 7:
                             print('WARNING2')
                         if iou_value == 0:
@@ -366,12 +373,9 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class
 
             b = b1.intersection(b2)
             bcoords = b.exterior.coords.xy
-
             bi = []
             for x, y in zip(bcoords[0], bcoords[1]):
                 bi.append([x, y])
-
-
 
             if len(bbox_indexes) > 2:
                 for i in range(2,len(bbox_indexes)):
@@ -388,11 +392,7 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class
 
                     bbNext = Polygon([(bbNextxTL, bbNextyTL), (bbNextxTR, bbNextyTR), (bbNextxBR, bbNextyBR), (bbNextxBL, bbNextyBL)])
 
-                    try:
-                        b = bbNext.intersection(b)
-
-                    except:
-                        print('hej')
+                    b = bbNext.intersection(b)
                     bcoords = b.exterior.coords.xy
 
                     bi = []
@@ -412,10 +412,7 @@ def compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_listed, class
                 intersected_bboxes.append(bi)
                 measurements.append(bi)
         else:
-            try:
-                bbx1 = bbox_list[bbox_indexes[0]]
-            except:
-                print('oj')
+            bbx1 = bbox_list[bbox_indexes[0]]
             bb1xTL = bbx1[0]
             bb1yTL = bbx1[1]
             bb1xTR = bbx1[2]
@@ -445,6 +442,7 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
     Output: bbox_all_list: List of mapped bboxes
     '''
     bbox_all_list = np.array([[1,2,3,4,5,6,7,8,9]], dtype=int)
+    classes_list_new = []
     # Collect all bboxes
     index = 0
     for (bbox, mapObject) in zip(bbox_list, mapObjects_list):
@@ -469,12 +467,17 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
                 xBR, yBR = mapObject.getPoint(BR)
                 xBL, yBL = mapObject.getPoint(BL)
 
-                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, classes_list[index]]], axis=0)
+                polygon_obj = [[xTL, yTL], [xTR, yTR], [xBR, yBR], [xBL, yBL]]
+                areaPolygon = areaOfPolygon(polygon_obj)
+                if areaPolygon >= 2500:
+                    bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, classes_list[index]]], axis=0)
+                    classes_list_new.append(classes_list[index])
+
 
                 index += 1
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
-    return bbox_all_list
+    return bbox_all_list, classes_list_new
 
 def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
     '''
@@ -509,9 +512,9 @@ def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
                 pBR = np.array([pBR])
                 xBR, yBR = mapObject.getPoint(pBR)
 
-
                 # Change top left corner and bottom right corner depending on which direction the camera is pointing
                 # to make it correct against the mapped view
+
                 bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]], axis=0)
 
     bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
