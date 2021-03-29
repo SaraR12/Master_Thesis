@@ -1,10 +1,16 @@
-<<<<<<< HEAD
-from groundTruth import getGroundTruthEvaluation
-=======
+
 from groundTruth import getGroundTruth, getGroundTruthEvaluation
->>>>>>> main
 import math
-import matplotlib.pyplot as plt
+
+""" 
+Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
+at Sigma Technology Insights 2021.
+
+Authors:
+Jonas Lindberg
+Sara Roth
+
+"""
 
 # Convert pixels to meters
 def pixel_to_meter(state):
@@ -13,15 +19,17 @@ def pixel_to_meter(state):
 # Get the true position
 AGV1Meter, AGV2Meter, AGV3Meter, AGV4Meter, AGV5Meter = getGroundTruthEvaluation()
 true_position_list = [AGV1Meter, AGV2Meter, AGV3Meter, AGV4Meter, AGV5Meter]
-<<<<<<< HEAD
+
 #true_position_list = [AGV2Meter, AGV1Meter, Human1, AGV4Meter, AGV3Meter, Human2]
 names_list = ['AGV1Meter', 'AGV2Meter', 'AGV3Meter', 'AGV4Meter', 'AGV5Meter']
 #names_list = ['AGV2Meter', 'AGV1Meter', 'Human1', 'AGV4Meter', 'AGV3Meter', 'Human2']
-=======
-names_list = ['AGV1Meter', 'AGV2Meter', 'AGV3Meter', 'AGV4Meter', 'AGV5Meter']
->>>>>>> main
+
+
 # Get the filtered position
 def filtered_positions(states, frame):
+    """
+    Get the filtered positions and compare with the true values to get the errors
+    """
     for state, truth, names in zip(states, true_position_list, names_list):
 
         filter_x = pixel_to_meter(state)[0]

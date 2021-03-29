@@ -1,5 +1,17 @@
 import numpy as np
 
+""" 
+Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
+at Sigma Technology Insights 2021.
+
+Groundtruth from the different blender enviroments
+
+Authors:
+Jonas Lindberg
+Sara Roth
+
+"""
+
 def getGroundTruth():
     AGV1meter = np.array([[2.289, 17.17], [2.289, 17.17], [2.289, 17.17], [2.289, 17.17], [2.289, 17.17],
                           [2.289, 17.17], [2.289, 17.17], [2.289, 17.17], [2.289, 17.17], [2.289, 17.17],

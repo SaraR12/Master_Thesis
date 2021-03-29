@@ -2,6 +2,16 @@ from shapely.geometry import LineString
 import math as m
 import numpy as np
 
+""" 
+Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
+at Sigma Technology Insights 2021.
+
+Authors:
+Jonas Lindberg
+Sara Roth
+
+"""
+
 def euclideanDistance(p1,p2):
     x1 = p1[0]
     y1 = p1[1]
@@ -17,6 +27,7 @@ def meterToPixel(xm,ym):
     scaley = 1069 / 30
     y = (30 - ym) * scaley
     return (round(x), round(y))
+
 def pixelToMeter(xp, yp):
     scalex = 50 / 1788
     x = xp * scalex
@@ -24,8 +35,6 @@ def pixelToMeter(xp, yp):
     scaley = 30 / 1069
     y = (1069 - yp) * scaley
     return (x,y)
-
-
 
 def triangulate(projectedPoints, cameraPositions):
     triangulatedPoints = []
@@ -45,26 +54,5 @@ def triangulate(projectedPoints, cameraPositions):
                 triangulatedPoints.append(intersection)
 
     return triangulatedPoints
-
-
-"""cameraPos1 = meterToPixel(-10.437, 8.9146)
-
-projPoint1 = (92,723)
-
-
-cameraPos2 = meterToPixel(24.168, 17.781)
-
-projPoint2 = (40,740)
-
-
-truePos = meterToPixel(2.4685, 9.682)
-#print((2.4685, 9.682))
-
-rms = m.sqrt((2.4685-2.371886054303795)**2+(9.682 - 9.697731229596354)**2)
-#print("Triangulation error (m): ",rms)
-
-camPos = [cameraPos1, cameraPos2]
-projPoints = [[projPoint1], [projPoint2]]
-triangulate(projPoints, camPos)"""
 
 

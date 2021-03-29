@@ -1,6 +1,16 @@
 import numpy as np
 # np.array([[],[],[],[],[],[],[]])
 
+""" 
+Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
+at Sigma Technology Insights 2021.
+
+Authors:
+Jonas Lindberg
+Sara Roth
+
+"""
+
 ''' Homographies for the different cameras '''
 
 def getKeypoints(camera):
@@ -65,6 +75,8 @@ def getKeypoints(camera):
         pts_src = np.array([[405,563],[1695,600],[504,461],[752,48],[1358,47],[933,461],[1852,755]])
         pts_dst = np.array([[749,934],[1676,960],[822,860],[999,567],[1433,566],[1129,858],[1787,1068]])
         return pts_src, pts_dst
+
+
     ######################################### EVALUATION ###################################################
     elif camera == 'BL':
         pts_src = np.array([[821, 646],[1304,632],[1659,628],[822,194],[641,832],[1312,201],[1719,443]])
