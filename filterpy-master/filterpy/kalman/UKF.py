@@ -255,7 +255,9 @@ class UnscentedKalmanFilter(object):
                  sqrt_fn=None, x_mean_fn=None, z_mean_fn=None,
                  residual_x=None,
                  residual_z=None,
-                 state_add=None):
+                 state_add=None,
+                 cls=None,
+                 id=None):
         """
         Create a Kalman filter. You are responsible for setting the
         various state variables to reasonable values; the defaults below will
@@ -265,12 +267,20 @@ class UnscentedKalmanFilter(object):
 
         #pylint: disable=too-many-arguments
 
+        ######## Added for indoor tracking project ########
+        # Handles multi-object tracking by assigning fixed id and class to a tracker
+        if cls is not None:
+            self.cls = cls
+        if id is not None:
+            self.id = id
+        ###################################################
+
         self.x = zeros(dim_x)
         self.P = eye(dim_x)
         self.x_prior = np.copy(self.x)
         self.P_prior = np.copy(self.P)
         self.Q = np.diag([5, 5, 100, 100])  # eye(dim_x)*200
-        self.R = eye(dim_z)*1
+        self.R = eye(dim_z)*15
         self._dim_x = dim_x
         self._dim_z = dim_z
         self.points_fn = points
