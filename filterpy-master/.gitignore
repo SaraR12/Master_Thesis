@@ -23,4 +23,9 @@ filterpy/inprogress.py
 
 */__pycache__/*
 *.pyc
+<<<<<<< HEAD
 *.py[cod]
+=======
+*.py[cod]
+__pycache__/
+>>>>>>> 1f3e1fa1c6c51951b32c6d82df1eb875cfe7dc00

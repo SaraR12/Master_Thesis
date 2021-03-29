@@ -1,13 +1,10 @@
 import argparse
 import os
 import platform
-import shutil
 import time
 from pathlib import Path
 
 import cv2
-#import torch
-#import torch.backends.cudnn as cudnn
 from numpy import random
 import numpy as np
 
@@ -21,8 +18,6 @@ from yolov5.utils.general import (
     check_img_size, non_max_suppression, apply_classifier, scale_coords, xyxy2xywh, plot_one_box, strip_optimizer)
 from yolov5.utils.torch_utils import select_device, load_classifier, time_synchronized
 
-from deep_sort.utils.parser import get_config
-from deep_sort.deep_sort import DeepSort
 import torch
 import torch.backends.cudnn as cudnn
 # Mapping
@@ -283,7 +278,7 @@ def detect(opt, device,camera, queue=None, save_img=False):
             #print('FPS=%.2f' % (1/(t3 - t1)))
 
             # Comment out if you dont want to step through video
-            """   """
+
             """if cv2.waitKey(0) == 33:
                 continue"""
             # Stream results
@@ -291,7 +286,6 @@ def detect(opt, device,camera, queue=None, save_img=False):
                 #numpy_horizontal = np.hstack((im0, mappedImg))
                 #cv2.imshow(p, im0)
                 #cv2.imshow('1', mappedImg)
-
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
 
@@ -325,11 +319,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5/weights/yolov5s.pt', help='model.pt path')
     parser.add_argument('--data', type=str, default='yolov5/data/data.yaml', help='data yaml path') # Class names
-    parser.add_argument('--source', type=str, default='videos/videoWN.mkv', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='videos/videoBL.mkv', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.61, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
+    parser.add_argument('--conf-thres', type=float, default=0.9, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.11, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
@@ -342,7 +336,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.img_size = check_img_size(args.img_size)
     print(args)
-    
+
     # Select GPU
     device = select_device(args.device)
     import torch
@@ -351,7 +345,7 @@ if __name__ == '__main__':
 
     test = []
     with torch.no_grad():
-        out = detect(args, device, 'M')
+        out = detect(args, device, 'MW')
         for i in out:
             test.append(i)
 
@@ -364,7 +358,7 @@ def run(path, camera, queue = None):
     parser.add_argument('--source', type=str, default=path, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.8, help='object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.9, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.1, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')

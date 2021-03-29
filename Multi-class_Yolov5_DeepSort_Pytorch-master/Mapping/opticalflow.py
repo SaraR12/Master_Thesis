@@ -1,12 +1,16 @@
 # Optical Flow
 
-# RUN object_tracker.py
-# conda activate yolov4-cpu
-# python3 object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 --video ./data/video/test.mp4 --output ./outputs/tiny.avi --tiny
-
-import cv2
-import numpy as np
 import math
+
+""" 
+Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
+at Sigma Technology Insights 2021.
+
+Authors:
+Jonas Lindberg
+Sara Roth
+
+"""
 
 """Solve optical flow problem
 
@@ -36,6 +40,8 @@ import math
 
     
 class OpticalFlow:
+
+    """ Create Optical flow objects and save states for the objects """
     
     def __init__(self, frame, id_b, center_point, class_name):
         self.frame = 0
@@ -47,25 +53,7 @@ class OpticalFlow:
         self.opt_dict = {} 
 
     def __call__(self, frame, id_b, center_point, class_name, writeDict=False):
-        
-        ### REMOVE LATER ####
-        if writeDict:
-            PATH_DICT = './outputs/dict_test.txt'
-            PATH_OUT = './outputs/optical_test.txt'
 
-        # Fill dictonary
-        '''if str(id_b) not in self.opt_dict: # If no stored info about current ID, add info.
-            # Add first ID found
-            self.opt_dict[str(id_b)] = [id_b, frame, frame, BBOX, BBOX, class_name]
-            # Can not make calculations here since no info about ID is stored
-
-            #print('Found new ID and added to dictionary')
-        else:
-            #print('Existing ID in dict')
-
-            # Extract info from dictonary for ID
-            ID, f_last, f_curr, bbox_last, bbox_curr, class_name = self.opt_dict[str(id_b)]
-        '''
         # Update parameters
         self.id_b = id_b # update ID
         '''self.last_frame = f_curr # Update last frame to the previous current frame'''
@@ -76,56 +64,31 @@ class OpticalFlow:
         self.class_name = class_name # Update class_name
 
         # Add new info to dictonary
-        self.opt_dict[str(self.id_b)] = [self.id_b, self.last_frame, self.frame, self.last_center_point, self.this_center_point , self.class_name ]
-
-        if writeDict:
-            with open(PATH_DICT, 'a') as fs:
-                fs.write(str(self.opt_dict[str(self.id_b)]) + "\n")
+        self.opt_dict[str(self.id_b)] = [self.id_b, self.last_frame, self.frame, self.last_center_point, self.this_center_point, self.class_name ]
 
         #### COMPUTATIONS ####
-
-        # Center point for last box
-        """last_box_center_x = self.last_BBOX[0] + self.last_BBOX[2]/2
-        last_box_center_y = self.last_BBOX[1] - self.last_BBOX[3]/2"""
-        #last_center_point_x = self.last_center_point[0]
-        #last_center_point_y = self.last_center_point[1]
-        #last_center_point = np.array([last_center_point_x, last_center_point_y])
-
-        # Center point for this box
-        """this_box_center_x = self.this_BBOX[0] + self.this_BBOX[2]/2
-        this_box_center_y = self.this_BBOX[1] - self.this_BBOX[3]/2"""
-        #this_center_point_x = self.this_center_point[0]
-        #this_center_point_y = self.this_center_point[1]
-        #this_center_point = np.array([this_box_center_x, this_box_center_y])
 
         # Frame delta
         frame_delta = self.frame - self.last_frame
 
         # Box delta in pixels/frame, vector of delta x and delta y 
         if frame_delta == 0:
-            center_point_xy = (self.this_center_point - self.last_center_point)
-            heading_xy = math.atan(center_point_xy[1]/center_point_xy[0])
+            center_point_change_xy = (self.this_center_point - self.last_center_point)
+            heading_xy = math.atan(center_point_change_xy[1]/center_point_change_xy[0])
             heading_xy = math.degrees(heading_xy)
         else:
             try:
-                center_point_xy = (self.this_center_point - self.last_center_point)/frame_delta
+                center_point_change_xy = (self.this_center_point - self.last_center_point)/frame_delta
             except:
                 print('failing')
-            heading_xy = math.atan(center_point_xy[1] / center_point_xy[0])
+            heading_xy = math.atan(center_point_change_xy[1] / center_point_change_xy[0])
             heading_xy = math.degrees(heading_xy)
 
-            #state = [self.frame, self.id_b, -1, self.class_name, np.array([last_box_center_x, last_box_center_y]), np.array([this_box_center_x, this_box_center_y]), box_delta_xy]
-        state = [center_point_xy, heading_xy]
+        state = [center_point_change_xy, heading_xy]
         # state = [frame, id, camera ID = -1, class, np.array(prev_x prev_y), np.array(x, y), np.array(dx, dy)]
 
         self.last_frame = frame
         self.last_center_point = center_point
-
-        ############REMOVE LATER ###########
-        if writeDict:
-            with open(PATH_OUT, 'a') as fs:
-                fs.write(str(state) + "\n")
-        ####################################
 
         return state
 
