@@ -120,7 +120,6 @@ def draw_bboxes(bbox_list, img, filter_list):
 
 ############################### INTERSECTION ###############################
 
-#def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
 def compute_iou_matrix(bbox_list, mapObjects_list, classes_list):
     '''
     Input:  bbox_list: List of N bboxes
@@ -129,7 +128,6 @@ def compute_iou_matrix(bbox_list, mapObjects_list, classes_list):
 
     Output: iou_matrix: NxN matrix with IoU-value
     '''
-    #bbox_list = bbox_to_coords(bbox_list, mapObjects_list, camera_id_list)
     bbox_list = map_bboxes(bbox_list, mapObjects_list, classes_list)
     bbox_list = np.delete(bbox_list, -1, 1)
 
@@ -198,7 +196,6 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
 
     Output: iou_matrix: NxN matrix with IoU-value
     '''
-    #iou_matrix = compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list)
     iou_matrix = compute_iou_matrix(bbox_list, mapObjects_list, classes_list)
 
     available_bboxes = [i for i in range(iou_matrix.shape[0])]
