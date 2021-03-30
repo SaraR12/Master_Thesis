@@ -140,10 +140,10 @@ def compute_iou_matrix(bbox_list, mapObjects_list, classes_list):
         bb1yTL = bbox[1]
         bb1xTR = bbox[2]
         bb1yTR = bbox[3]
-        bb1xBL = bbox[4]
-        bb1yBL = bbox[5]
-        bb1xBR = bbox[6]
-        bb1yBR = bbox[7]
+        bb1xBR = bbox[4]
+        bb1yBR = bbox[5]
+        bb1xBL = bbox[6]
+        bb1yBL = bbox[7]
         p1 = Polygon([(bb1xTL, bb1yTL), (bb1xTR, bb1yTR), (bb1xBR, bb1yBR), (bb1xBL, bb1yBL)])
 
         areaBbx1 = areaOfPolygon([[bb1xTL, bb1yTL], [bb1xTR, bb1yTR], [bb1xBR, bb1yBR], [bb1xBL, bb1yBL]])
@@ -154,10 +154,10 @@ def compute_iou_matrix(bbox_list, mapObjects_list, classes_list):
             bb2yTL = candidate[1]
             bb2xTR = candidate[2]
             bb2yTR = candidate[3]
-            bb2xBL = candidate[4]
-            bb2yBL = candidate[5]
-            bb2xBR = candidate[6]
-            bb2yBR = candidate[7]
+            bb2xBR = candidate[4]
+            bb2yBR = candidate[5]
+            bb2xBL = candidate[6]
+            bb2yBL = candidate[7]
             p2 = Polygon([(bb2xTL, bb2yTL), (bb2xTR, bb2yTR), (bb2xBR, bb2yBR), (bb2xBL, bb2yBL)])
 
             if p1.intersects(p2):
@@ -451,48 +451,6 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
                 index += 1
 
     bbox_all_list = np.delete(bbox_all_list, (0), axis=0)
-    return bbox_all_list
-
-def bbox_to_coords(bbox_list, mapObjects_list, camera_id_list):
-    '''
-    Input:
-            bbox_list: List of N bboxes
-            mapObjects_list: List with mapper class objects
-            camera_id_list: List with camera id for each bbox
-
-    Output: bbox_all_list: List of mapped bboxes in [xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]
-    '''
-    bbox_all_list = np.array([[1,2,3,4,5,6,7,8]], dtype='int')
-    for (bbox, mapObject, camID) in zip(bbox_list, mapObjects_list, camera_id_list):
-        if bbox != []:
-            for (i, box), id in zip(enumerate(bbox), camID):
-                id = int(id)
-
-                x1c, y1c, x2c, y2c = [int(i) for i in box]
-
-                pTL = np.array([[x1c,y1c]], dtype='float32')
-                pTL = np.array([pTL])
-                xTL, yTL = mapObject.getPoint(pTL)
-
-                pTR = np.array([[x2c, y1c]], dtype='float32')
-                pTR = np.array([pTR])
-                xTR, yTR = mapObject.getPoint(pTR)
-
-                pBL = np.array([[x1c, y2c]], dtype='float32')
-                pBL = np.array([pBL])
-                xBL, yBL = mapObject.getPoint(pBL)
-
-                pBR = np.array([[x2c, y2c]], dtype='float32')
-                pBR = np.array([pBR])
-                xBR, yBR = mapObject.getPoint(pBR)
-
-
-                # Change top left corner and bottom right corner depending on which direction the camera is pointing
-                # to make it correct against the mapped view
-                bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBL, yBL, xBR, yBR]], axis=0)
-
-    bbox_all_list = np.delete(bbox_all_list, 0,  axis=0)
-
     return bbox_all_list
 
 
