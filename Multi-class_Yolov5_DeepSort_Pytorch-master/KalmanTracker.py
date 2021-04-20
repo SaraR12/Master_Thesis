@@ -22,8 +22,27 @@ def fx(x, dt):
                   [0, 0, 0, dt]])
     return np.dot(F, x)
 
+def fxCT(state, dt):
+    x = state[0]
+    y = state[1]
+    v = state[2]
+    phi = state[3]
+    omega = state[4]
+
+
+    F = np.array([[x + 2 * (v / omega) * math.sin((omega / 2) * dt) * math.cos(phi + (omega * dt / 2))],
+                  [y + 2 * (v / omega) * math.sin((omega / 2) * dt) * math.sin(phi + (omega * dt / 2))],
+                  [v],
+                  [phi + dt * omega],
+                  [omega]])
+    return F.squeeze()
+def hxCT(x):
+    H = np.array([[1, 0, 0, 0, 0],
+                  [0, 1, 0, 0, 0]])
+    return np.dot(H, x)
+
 def InitUKFTracker(measurement_list, cls_list):
-    points = MerweScaledSigmaPoints(n=4, alpha=0.001, beta=2, kappa=0)
+    points = MerweScaledSigmaPoints(n=5, alpha=0.001, beta=2, kappa=0)
 
     filter_list = []
     x_list = []
@@ -31,13 +50,13 @@ def InitUKFTracker(measurement_list, cls_list):
     number_of_objects = len(measurement_list)
 
     for i in range(number_of_objects):
-        filter_list.append(UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=1/24, hx=hx, fx=fx, points=points,
+        filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1/24, hx=hxCT, fx=fxCT, points=points,
                                                  cls=cls_list[i], id=i))
 
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
         center = calculateCenterPoint(measurement)
 
-        filter.x = [center[0], center[1], 0, 0]
+        filter.x = [center[0], center[1], 0, 0, math.pi]
 
         filter.predict()
 
@@ -66,8 +85,11 @@ def updateUKFTracker(filter_list, x_list, measurement_list):
             center = calculateCenterPoint(measurement)
 
             filter.update(center)
+            #filter.age = 0
 
             x_list[i] = filter.x
+        """else:
+            filter.age += 1"""
 
     return filter_list, x_list
 
@@ -132,6 +154,9 @@ def association(filter_list, mean_list, measurement_list, class_list):
 
     associated_measurement_list = [[] for i in range(nbr_trackers)]#np.zeros((1,N))
     associated_measurement_matrix = []
+
+    unassociated_measurement_list = []
+
     associated_classes = []
     associated_filter_list = []
     counter = 0
@@ -145,31 +170,11 @@ def association(filter_list, mean_list, measurement_list, class_list):
         col = associated_measurement_matrix[:,i]
         association_index = np.argmin(col)
         distance_between_state_measurement = col[association_index]
-        if distance_between_state_measurement < 100:
+        if distance_between_state_measurement < 105:
             associated_measurement_list[association_index] = measurement_list[i]
+        """else:
+            unassociated_measurement_list[association_index] = measurement_list[i]"""
 
-
-
-    """
-    for (i, filter), mean in zip(enumerate(filter_list), mean_list):
-        distance = euclidean(mean, measurement_list)
-        association_index = np.argmin(distance)
-
-        if distance[association_index] < 70:
-            associated_measurement_list.append(measurement_list[association_index])
-            #associated_classes.append(class_list[association_index])
-        else:
-            associated_measurement_list.append([])
-            #associated_classes.append(class_list[counter])
-        counter += 1
-
-    for (i, filter), mean, cov in zip(enumerate(filter_list), mean_list, cov_list):
-        squared_maha = filter.gating_distance(mean, cov, measurement_matrix)
-        association_index = np.argmin(squared_maha)
-        if squared_maha[association_index] < 78:  # 8:
-            associated_measurement_list.append(measurement_list[association_index])
-        else:
-            associated_measurement_list.append([])"""
     return associated_measurement_list #, associated_classes
 
 
