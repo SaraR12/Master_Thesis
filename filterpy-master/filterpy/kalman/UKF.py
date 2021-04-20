@@ -26,8 +26,8 @@ from numpy import eye, zeros, dot, isscalar, outer
 from scipy.linalg import cholesky
 from filterpy.kalman import unscented_transform
 from filterpy.stats import logpdf
-from filterpy.common import pretty_str
-
+from filterpy.common import pretty_str, Q_discrete_white_noise
+import math
 
 class UnscentedKalmanFilter(object):
     # pylint: disable=too-many-instance-attributes
@@ -276,11 +276,17 @@ class UnscentedKalmanFilter(object):
         ###################################################
 
         self.x = zeros(dim_x)
-        self.P = eye(dim_x)
+        self.P = eye(dim_x)*100
         self.x_prior = np.copy(self.x)
         self.P_prior = np.copy(self.P)
-        self.Q = np.diag([5, 5, 100, 100])  # eye(dim_x)*200
-        self.R = eye(dim_z)*15
+        #self.Q = np.diag([8000, 8000, 5000, 5000])  # eye(dim_x)*200,
+        #self.Q = eye(dim_x)
+
+        self.sigma_v = 0.1 # 0.1, TOTAL ERROR  0.0769585642689385
+        self.sigma_omega = 0.915 * math.pi / 180
+        self.Q = np.diag([0, 0, dt * self.sigma_v**2, 0, dt * self.sigma_omega**2])
+        if dim_x < 4: self.Q *= Q_discrete_white_noise(dim_x, dt, .01)
+        self.R = eye(dim_z)*0.0000001
         self._dim_x = dim_x
         self._dim_z = dim_z
         self.points_fn = points
@@ -290,6 +296,8 @@ class UnscentedKalmanFilter(object):
         self.fx = fx
         self.x_mean = x_mean_fn
         self.z_mean = z_mean_fn
+
+        self.x_list = []
 
         # Only computed only if requested via property
         self._log_likelihood = log(sys.float_info.min)
@@ -342,7 +350,7 @@ class UnscentedKalmanFilter(object):
         self.P_post = self.P.copy()
 
     def predict(self, dt=None, UT=None, fx=None, **fx_args):
-        """
+        r"""
         Performs the predict step of the UKF. On return, self.x and
         self.P contain the predicted state (x) and covariance (P). '
 
@@ -469,6 +477,8 @@ class UnscentedKalmanFilter(object):
         self._log_likelihood = None
         self._likelihood = None
         self._mahalanobis = None
+
+        self.x_list.append(self.x)
 
     def cross_variance(self, x, z, sigmas_f, sigmas_h):
         """
