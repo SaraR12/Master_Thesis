@@ -19,7 +19,6 @@ Sara Roth
 """
 
 def arrayToInt(p):
-    """ Converts an array to an int """
     x = int(p[:,:,0])
     y = int(p[:,:,1])
     return x,y
@@ -30,17 +29,11 @@ class Mapper:
         self.H, _ = cv.findHomography(pts_src,pts_dst, cv.RANSAC, 5.0)
 
     def getPoint(self, point):
-        """ Transform a point in regards to the homography """
         p = cv.perspectiveTransform(point, self.H)
         x, y = arrayToInt(p)
         return x, y
 
-    def mapFromBoundingBox(self, x1,x2,y1,y2, color):
-        """ Map the incomming points on a planar view
-            Input: x1, x2, y1, y2: TLx TRx TLy TRy
-            Output: mappedImg: Planarview image with the mapped boundingboxes
-                    mappedPoint: mapped point on the planar view
-        """
+    def mapFromBoundingBox(self, x1,x2,y1,y2, markerColor):
         midx = round((x1 + x2) / 2)
         midy = round((y1 + y2) / 2)
 
@@ -65,12 +58,6 @@ class Mapper:
         return mappedImg, mappedPoint
 
     def mapBoundingBoxPoints(self,x1,x2,y1,y2, color):
-        """ Convert incomming points to mapped points
-            Input:  x1, x2, y1, y2: TLx TRx TLy TRy
-                    color: Color
-            Output: x1m, x2m, y1m, y2m: Mapped points
-                    color: Color
-        """
         p1 = np.array([[x1, y1]], dtype='float32')
         p1 = np.array([p1])
         p2 = np.array([[x2, y2]], dtype='float32')

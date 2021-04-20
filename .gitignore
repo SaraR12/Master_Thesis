@@ -8,4 +8,3 @@ yolov4.weights
 */__pycache__/*
 *.pyc
 *.py[cod]
-__pycache__/

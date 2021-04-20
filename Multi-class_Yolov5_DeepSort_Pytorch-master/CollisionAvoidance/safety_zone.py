@@ -1,6 +1,6 @@
 import math
 
-def getSafetyZone(centerList, headingList, class_list, heatmap):
+def getSafetyZone(centerList, headingList, class_list, heatmap=None):
     points_list = []
     for center, heading, cls in zip(centerList, headingList, class_list):
         # Different size of bounding box depending on class
@@ -12,14 +12,14 @@ def getSafetyZone(centerList, headingList, class_list, heatmap):
         threshold1 = 2
 
         if cls == 0 and abs(abs(xheading) - abs(yheading)) < threshold1:
-            w = 70
-            h = 70
+            w = 60
+            h = 60
         elif cls == 0 and abs(yheading) < abs(xheading):  # AGV
-            w = 70
+            w = 60
             h = 40
         elif cls == 0 and abs(xheading) < abs(yheading):
             w = 40
-            h = 70
+            h = 60
         elif cls == 1:  # Human
             w = 35
             h = 35
@@ -42,7 +42,7 @@ def getSafetyZone(centerList, headingList, class_list, heatmap):
         #xheading = math.ceil(heading[0])
         #yheading = math.ceil(heading[1])
 
-        safetyFactor = heatmap[round(center[1]), round(center[0])]
+        #safetyFactor = heatmap[round(center[1]), round(center[0])]
 
 
         #threshold2 = 1
@@ -52,41 +52,41 @@ def getSafetyZone(centerList, headingList, class_list, heatmap):
             if abs(abs(xheading) - abs(yheading)) < threshold and all([xheading, yheading]):
                 print('threshold', threshold)
                 if xheading > 0 and yheading > 0:
-                    p1[0] += round(xheading*5)
-                    p2[0] += round(xheading*5)
-                    p2[1] += round(yheading*5)
-                    p3[1] += round(yheading*5)
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
+                    p2[1] += round(yheading*4)
+                    p3[1] += round(yheading*4)
                 elif xheading > 0 and yheading < 0:
-                    p0[1] += round(yheading*5)
-                    p1[1] += round(yheading*5)
-                    p1[0] += round(xheading*5)
-                    p2[0] += round(xheading*5)
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
                 elif xheading < 0 and yheading < 0:
-                    p0[0] += round(xheading*5)
-                    p0[1] += round(yheading*5)
-                    p1[1] += round(yheading*5)
-                    p3[0] += round(xheading*5)
+                    p0[0] += round(xheading*4)
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
+                    p3[0] += round(xheading*4)
                 elif xheading < 0 and yheading > 0:
-                    p0[0] += round(xheading*5)
-                    p3[0] += round(xheading*5)
-                    p3[1] += round(yheading*5)
-                    p2[1] += round(yheading*5)
+                    p0[0] += round(xheading*4)
+                    p3[0] += round(xheading*4)
+                    p3[1] += round(yheading*4)
+                    p2[1] += round(yheading*4)
 
             elif abs(xheading) > abs(yheading):
                 if xheading > 0:
-                    p1[0] += round(xheading*5)
-                    p2[0] += round(xheading*5)
+                    p1[0] += round(xheading*4)
+                    p2[0] += round(xheading*4)
                 else:
-                    p0[0] += round(xheading*5)
-                    p3[0] += round(xheading*5)
+                    p0[0] += round(xheading*4)
+                    p3[0] += round(xheading*4)
 
             elif abs(yheading) > abs(xheading):
                 if yheading > 0:
-                    p2[1] += round(yheading*5)
-                    p3[1] += round(yheading*5)
+                    p2[1] += round(yheading*4)
+                    p3[1] += round(yheading*4)
                 else:
-                    p0[1] += round(yheading*5)
-                    p1[1] += round(yheading*5)
+                    p0[1] += round(yheading*4)
+                    p1[1] += round(yheading*4)
 
 
         #   p0, p1, p2, p3 = rect.rotate_rectangle(p0,p1,p2,p3,angle)

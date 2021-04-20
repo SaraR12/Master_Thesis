@@ -1,16 +1,6 @@
 import numpy as np
 # np.array([[],[],[],[],[],[],[]])
 
-""" 
-Part of Master Thesis 'Indoor Tracking using a Central Camera System' at Chalmers University of Technology, conducted
-at Sigma Technology Insights 2021.
-
-Authors:
-Jonas Lindberg
-Sara Roth
-
-"""
-
 ''' Homographies for the different cameras '''
 
 def getKeypoints(camera):
@@ -75,8 +65,6 @@ def getKeypoints(camera):
         pts_src = np.array([[405,563],[1695,600],[504,461],[752,48],[1358,47],[933,461],[1852,755]])
         pts_dst = np.array([[749,934],[1676,960],[822,860],[999,567],[1433,566],[1129,858],[1787,1068]])
         return pts_src, pts_dst
-
-
     ######################################### EVALUATION ###################################################
     elif camera == 'BL':
         pts_src = np.array([[821, 646],[1304,632],[1659,628],[822,194],[641,832],[1312,201],[1719,443]])
@@ -86,6 +74,12 @@ def getKeypoints(camera):
     elif camera == 'ML':
         pts_src = np.array([[798,940],[1290,737],[796,22],[1291,31],[1290,495],[1635,913],[807,479]])
         pts_dst = np.array([[153,921],[572,749],[151,141],[572,149],[572,544],[864,898],[160,530]])
+        return pts_src, pts_dst
+
+    elif camera == 'ML2':
+        #pts_src = np.array([[132,655],[1668,657],[344,442],[888,440],[1426,441],[1435,431],[355,431]])
+        pts_src = np.array([[148,629], [1655,629], [346,417], [888,415],[1424,415], [1434,405], [356,407]])
+        pts_dst = np.array([[0,0],[0,1080],[151,141],[153,530],[153,914],[160,921],[158,148]])
         return pts_src, pts_dst
 
     elif camera == 'MM':
@@ -103,7 +97,19 @@ def getKeypoints(camera):
         pts_dst = np.array([[151,148],[572,149],[153,537],[0,0],[1080,0],[571,543],[915,543]])
         return pts_src, pts_dst
 
+    elif camera == 'TL2':
+        #pts_src = np.array([[6,589],[1317,589],[1133,417],[1125,409],[622,417],[614,409],[1125,417]])
+        pts_src = np.array([[96,660],[1699,660],[1474,450],[1462,438],[849,449],[838,438],[1463,449]])
+        pts_dst = np.array([[1080,0],[0,0],     [151,141], [158,148], [572,141],[579,148],[159,141]])
+        return pts_src, pts_dst
+
     elif camera == 'TR':
         pts_src = np.array([[167,477],[671,477],[169,944],[661,951],[1066,951],[1259,311],[863,952]])
         pts_dst = np.array([[151,141],[580,141],[153,538],[572,543],[915,543],[1079,0],[743,542]])
+        return pts_src, pts_dst
+
+    elif camera == 'CameraShelf':
+        #pts_src = np.array([[704,957],[701,602],[687,119],[1139,120],[1596,118],[1596,613],[1132,603]])
+        pts_src = np.array([[666,1019],[662,611],[646,57],[1165,58],[1690,56],[1690,624],[1157,612]])
+        pts_dst = np.array([[872,906],[570,909],[160,921],[160,537],[158,149],[579,148],[571,543]])
         return pts_src, pts_dst
