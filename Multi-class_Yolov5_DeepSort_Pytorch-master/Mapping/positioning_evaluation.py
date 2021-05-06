@@ -68,6 +68,7 @@ def filtered_positions(states, frame):
         print('-----------------------------------------')
     print('TOTAL ERROR ', np.mean(combined_total_error))
     if frame == 299:
+        print('MEDIAN ', np.median(combined_total_error))
         #print('Mean error AGV1 = ', np.mean(agv1error))
         """print('Mean error AGV2 = ', np.mean(agv2error))
         print('Mean error AGV3 = ', np.mean(agv3error))

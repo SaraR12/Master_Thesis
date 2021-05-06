@@ -255,7 +255,13 @@ def consumer():
 
                     filter_listUKF, x_list,classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
 
-                    bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
+                    bbox_xyah, unassociated_measurements = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
+
+                    if unassociated_measurements != []:
+                        addedFilter, addedX = InitUKFTracker(unassociated_measurements)
+                        #filter_listUKF.append(addedFilter[0])
+                        x_list.append(addedX[0])
+
 
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     #heatmap = heatmap_obj.update(x_list, classlist_bbox_test)

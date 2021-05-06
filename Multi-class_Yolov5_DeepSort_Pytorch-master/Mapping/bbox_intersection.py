@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from Mapping.mapper import *
 from shapely.geometry import Polygon
 
@@ -56,7 +57,7 @@ def draw_multiple_boxes(bbox_list, mapping_objects, classes_list, cam_id_list, i
 
             # Plot the boxes
             color = compute_color_for_labels(id)
-            cv2.polylines(img, [pts], True, color, 2)
+            cv2.polylines(img, [pts], True, color, thickness=2)
             label = str(CAMERAS[int(id)])
             t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
             cv2.rectangle(img, (xTR, yTR), (xTR + t_size[0] + 3, yTR + t_size[1] + 4), color, -1)
@@ -85,10 +86,10 @@ def draw_bboxesTEMP(bbox_list, img):
         centerY = round((1069 - center[1]) * scale_y, 3)
 
         pts = np.array([])
-        for i in range(len(bbox) - 1):
+        for i in range(len(bbox) - 2):
             pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
-        cv2.polylines(empty_img, [np.int32(pts)],True, (255,0,0))
+        cv2.polylines(empty_img, [np.int32(pts)],True, (255,0,0), thickness=2)
 
     return empty_img
 
@@ -114,7 +115,7 @@ def draw_bboxes(bbox_list, img, filter_list):
         centerY = round((1069 - center[1]) * scale_y, 3)
 
         pts = np.array([])
-        for i in range(len(bbox) - 1):
+        for i in range(len(bbox) - 2):
             pts = np.append(pts, np.round(bbox[i]))
         pts = pts.reshape((-1, 1, 2))
         cv2.fillPoly(empty_img, [np.int32(pts)], color)
@@ -167,10 +168,7 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
         # determine the coordinates of the intersection rectangle
 
         for j, candidate in enumerate(bbox_list):
-            try:
-                bb2xTL = candidate[0]
-            except:
-                print('naii')
+            bb2xTL = candidate[0]
             bb2yTL = candidate[1]
             bb2xTR = candidate[2]
             bb2yTR = candidate[3]
@@ -192,8 +190,7 @@ def compute_iou_matrix(bbox_list, mapObjects_list, camera_id_list):
                     areaBbox2 = areaOfPolygon(intersected_bbox)
 
                     iou = areaBbox2 / areaBbx1
-                except:
-                    print('Error')
+                except Exception:
                     iou = 0
             else:
                 iou = 0
@@ -241,7 +238,7 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
 
             switcher = 0  # Switch between row/column search
 
-            while not end:
+            while not end and available_bboxes != []:
                 currentIndex = index
 
                 if switcher == 0:
@@ -255,10 +252,10 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                     while loop_flag:  # Search for a candidate with the most iou overlapping
                         try:
                             iou_value = np.partition(iou_matrix[currentIndex,:].flatten(), -i)[-i]
-                        except:
+                        except Exception:
                             iou_value = 0
-                        if i > 7:
-                            print('WARNING1')
+                        """if i > 7:
+                            print('WARNING1')"""
 
                         index = np.where(iou_matrix[currentIndex,:] == iou_value)[-1]
                         if iou_value == 0:
@@ -266,10 +263,16 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                             end = True
 
                         if len(index) > 1:
-                            loop_flag = False
-                            end = True
-                            break
+                            if iou_value > 0:
+                                for i in range(1,len(index)):
+                                    iou_matrix[currentIndex, index[i]] -= 0.01*i
+                                index = np.where(iou_matrix[currentIndex, :] == iou_value)[-1]
+                            else:
+                                loop_flag = False
+                                end = True
+                                break
                         else:
+
                             if index in available_bboxes:
                                 if classes_list[index[0]] == 2:
                                     classes_list[index[0]] = 0
@@ -287,17 +290,16 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                     switcher = 1
 
                 elif switcher == 1:
-                    #print(iou_matrix[:, index])
                     currentIndex = index
                     i = 1
                     loop_flag = True
                     while loop_flag:  # Search for a candidate with the most iou overlapping
                         try:
                             iou_value = np.partition(iou_matrix[:, currentIndex].flatten(), -i)[-i]
-                        except:
+                        except Exception:
                             iou_value = 0
-                        if i > 7:
-                            print('WARNING2')
+                        """if i > 7:
+                            print('WARNING2')"""
                         if iou_value == 0:
                             loop_flag = False
                             end = True
@@ -307,8 +309,13 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                         else:
                             index = np.where(iou_matrix[:, currentIndex].flatten() == iou_value)[-1]
                             if len(index) > 1:
-                                loop_flag = False
-                                break
+                                if iou_value > 0:
+                                    for i in range(1, len(index)):
+                                        iou_matrix[index[i], currentIndex] -= 0.01 * i
+                                    index = np.where(iou_matrix[:, currentIndex] == iou_value)[-1]
+                                else:
+                                    loop_flag = False
+                                    break
                             else:
                                 if index in available_bboxes:
                                     if all([iou_matrix[index, i] > 0 for i in intersected_bbox]) and (class_bbox == classes_list[index[0]]):
@@ -469,7 +476,7 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
 
                 polygon_obj = [[xTL, yTL], [xTR, yTR], [xBR, yBR], [xBL, yBL]]
                 areaPolygon = areaOfPolygon(polygon_obj)
-                if areaPolygon >= 2500:
+                if areaPolygon >= 250:
                     bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, classes_list[index]]], axis=0)
                     classes_list_new.append(classes_list[index])
 

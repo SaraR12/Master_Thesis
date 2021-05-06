@@ -257,7 +257,8 @@ class UnscentedKalmanFilter(object):
                  residual_z=None,
                  state_add=None,
                  cls=None,
-                 id=None):
+                 id=None,
+                 maxAge=None):
         """
         Create a Kalman filter. You are responsible for setting the
         various state variables to reasonable values; the defaults below will
@@ -273,8 +274,10 @@ class UnscentedKalmanFilter(object):
             self.cls = cls
         if id is not None:
             self.id = id
+        if maxAge is not None:
+            self.maxAge = maxAge
+            self.age = 0
         ###################################################
-
         self.x = zeros(dim_x)
         self.P = eye(dim_x)*100
         self.x_prior = np.copy(self.x)

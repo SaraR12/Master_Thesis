@@ -1,4 +1,4 @@
-import cv2
+from cv2 import circle, rectangle, putText, FONT_HERSHEY_PLAIN, circle
 from deep_sort.deep_sort.sort.kalman_filter import *
 
 import sys, os
@@ -8,19 +8,6 @@ from filterpy.kalman import *
 from filterpy.kalman import MerweScaledSigmaPoints
 #from filterpy.kalman.kalman_filter import *
 #from filterpy-master.filterpy.kalman.CubatureKalmanFilter import *
-
-
-def hx(x):
-    H = np.array([[1, 0, 0, 0],
-                  [0, 1, 0, 0]])
-    return np.dot(H, x)
-
-def fx(x, dt):
-    F = np.array([[1, 0, dt, 0],
-                  [0, 1, 0, dt],
-                  [0, 0, dt, 0],
-                  [0, 0, 0, dt]])
-    return np.dot(F, x)
 
 def fxCT(state, dt):
     x = state[0]
@@ -41,17 +28,22 @@ def hxCT(x):
                   [0, 1, 0, 0, 0]])
     return np.dot(H, x)
 
-def InitUKFTracker(measurement_list, cls_list):
+def InitUKFTracker(measurement_list, cls_list, filterlist=None):
     points = MerweScaledSigmaPoints(n=5, alpha=0.001, beta=2, kappa=0)
 
     filter_list = []
     x_list = []
 
     number_of_objects = len(measurement_list)
-
-    for i in range(number_of_objects):
-        filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1/24, hx=hxCT, fx=fxCT, points=points,
-                                                 cls=cls_list[i], id=i))
+    if filterlist is not None:
+        number_of_filters = len(filterlist)
+        for i in range(number_of_objects):
+            filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1 / 24, hx=hxCT, fx=fxCT, points=points,
+                                                     cls=cls_list[i], id=number_of_filters + 1 + i, maxAge=50))
+    else:
+        for i in range(number_of_objects):
+            filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1/24, hx=hxCT, fx=fxCT, points=points,
+                                                     cls=cls_list[i], id=i, maxAge=50))
 
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
         center = calculateCenterPoint(measurement)
@@ -80,16 +72,19 @@ def predictUKFTracker(filter_list, x_list):
 
 def updateUKFTracker(filter_list, x_list, measurement_list):
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
-        if measurement != []: #[]:
+        if measurement != []:
 
-            center = calculateCenterPoint(measurement)
+            _center = calculateCenterPoint(measurement)
 
-            filter.update(center)
-            #filter.age = 0
+            filter.update(_center)
+            filter.age = 0
 
             x_list[i] = filter.x
-        """else:
-            filter.age += 1"""
+        else:
+            filter.age += 1
+            if filter.age > 6:
+                filter_list.pop(i)
+                x_list.pop(i)
 
     return filter_list, x_list
 
@@ -134,9 +129,9 @@ def drawFilterOutput(xyah, frame):
         y1 = int(round(y1 - 25))
         y2 = int(round(y1 + h))
         x2 = int(round(x1 + a * h))
-        cv2.circle(frame, (x1,y1), 1, (0,0,255), 1)
-        cv2.circle(frame, (x2, y2), 1, (0, 255, 255), 1)
-        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+        circle(frame, (x1,y1), 1, (0,0,255), 1)
+        circle(frame, (x2, y2), 1, (0, 255, 255), 1)
+        rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
         #cv2.circle(frame, p, 2, color, 2)
 
@@ -156,10 +151,8 @@ def association(filter_list, mean_list, measurement_list, class_list):
     associated_measurement_matrix = []
 
     unassociated_measurement_list = []
+    unassociated_class_list = []
 
-    associated_classes = []
-    associated_filter_list = []
-    counter = 0
     for mean in mean_list:
         distance = euclidean(mean, measurement_list)
         associated_measurement_matrix.append(distance)
@@ -170,12 +163,12 @@ def association(filter_list, mean_list, measurement_list, class_list):
         col = associated_measurement_matrix[:,i]
         association_index = np.argmin(col)
         distance_between_state_measurement = col[association_index]
-        if distance_between_state_measurement < 105:
+        if distance_between_state_measurement < 65:
             associated_measurement_list[association_index] = measurement_list[i]
-        """else:
-            unassociated_measurement_list[association_index] = measurement_list[i]"""
-
-    return associated_measurement_list #, associated_classes
+        else:
+            unassociated_measurement_list.append(measurement_list[i])
+            unassociated_class_list.append(class_list[i])
+    return associated_measurement_list, unassociated_measurement_list, unassociated_class_list
 
 
 def euclidean(mean, measurement_list):

@@ -70,33 +70,33 @@ def trackerCamWN2(path):
 # Crate consumer that is the main execution function
 def consumer():
     # Get overview image
-    PLANE = cv2.imread('Mapping/plane.png')
-    W, H, _ = PLANE.shape
-    CAP = cv2.VideoCapture('videos/OneAGV/VideoOrto.mkv')
+    PLANE = cv2.imread('Mapping/plane1.png')
+    H, W, _ = PLANE.shape
+    CAP = cv2.VideoCapture('videos/VideoOrtoLargeCanvas.mkv')
     VIDEOFRAME = PLANE
     ret, VIDEOFRAME = CAP.read()
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (W, H))
 
     # Get all the homographies to the different cameras
-    pts_src, pts_dst = getKeypoints('BL')
+    pts_src, pts_dst = getKeypoints('WN')
     mapObjWN = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("ML2")
+    pts_src, pts_dst = getKeypoints("MSW")
     mapObjMSW = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("MM")
+    pts_src, pts_dst = getKeypoints("NS")
     mapObjNS = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("MR")
+    pts_src, pts_dst = getKeypoints("M")
     mapObjM = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints("TL2")
+    pts_src, pts_dst = getKeypoints("EN")
     mapObjEN = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints('TR')
+    pts_src, pts_dst = getKeypoints('ME')
     mapObjME = Mapper(PLANE, pts_src, pts_dst)
 
-    pts_src, pts_dst = getKeypoints('CameraShelf')
+    pts_src, pts_dst = getKeypoints('WN2')
     mapObjWN2 = Mapper(PLANE, pts_src, pts_dst)
 
     mapping_objects = [mapObjWN, mapObjMSW, mapObjNS, mapObjM, mapObjEN, mapObjME, mapObjWN2]  # mapObjWN2
@@ -235,21 +235,24 @@ def consumer():
 
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     #filter_list, mean_list, covariance_list = InitKalmanTracker(bbox_xyah)
-                    filter_listUKF, x_list, = InitUKFTracker(bbox_xyah, classlist_bbox)
+                    filter_listUKF, x_list = InitUKFTracker(bbox_xyah, classlist_bbox)
                     opticalflow_list = []
 
                     for (id, point), cls in zip(enumerate(x_list), classlist_bbox):
                         opticalflow_list.append(OpticalFlow(frame, id, point, cls))
 
                 elif frame > 1:
-                    if frame == 14:
-                        print('hej')
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
                     heading_list = []
 
-                    filter_listUKF, x_list,classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
+                    filter_listUKF, x_list, classlist_bbox_test = predictUKFTracker(filter_listUKF, x_list)
 
-                    bbox_xyah = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
+                    bbox_xyah, unassociated_bbox_xyah, unassociated_class_list = association(filter_listUKF, x_list, bbox_xyah, classlist_bbox)
+                    if unassociated_bbox_xyah != []:
+                        filter_listUKFnew, x_listnew = InitUKFTracker(unassociated_bbox_xyah, unassociated_class_list, filterlist=filter_listUKF)
+
+                        filter_listUKF.append(filter_listUKFnew[0])
+                        x_list.append(x_listnew[0])
 
                     filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
                     #heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
@@ -302,13 +305,13 @@ if __name__ == '__main__':
     qWN2 = queue.Queue()
 
     # Producers
-    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/OneAGV/VideoBL.mkv',), daemon=True).start() #1
-    threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/OneAGV/VideoML.mkv',), daemon=True).start() # 2
-    threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/OneAGV/VideoMM.mkv',), daemon=True).start() #3
-    threadCamM = threading.Thread(target=trackerCamM, args=('videos/OneAGV/VideoMR.mkv',), daemon=True).start() #4
-    threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/OneAGV/VideoTL.mkv',), daemon=True).start() #5
-    threadCamME = threading.Thread(target=trackerCamME, args=('videos/OneAGV/VideoTR.mkv',), daemon=True).start() # 6
-    threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/OneAGV/VideoShelf.mkv',), daemon=True).start()  # 7
+    threadCamWN = threading.Thread(target=trackerCamWN, args=('videos/VideoWN.mkv',), daemon=True).start() #1
+    threadCamMSW = threading.Thread(target=trackerCamMSW, args=('videos/VideoMSW.mkv',), daemon=True).start() # 2
+    threadCamNS = threading.Thread(target=trackerCamNS, args=('videos/VideoNS.mkv',), daemon=True).start() #3
+    threadCamM = threading.Thread(target=trackerCamM, args=('videos/VideoM.mkv',), daemon=True).start() #4
+    threadCamEN = threading.Thread(target=trackerCamEN, args=('videos/VideoEN.mkv',), daemon=True).start() #5
+    threadCamME = threading.Thread(target=trackerCamME, args=('videos/VideoME.mkv',), daemon=True).start() # 6
+    threadCamWN2 = threading.Thread(target=trackerCamWN2, args=('videos/VideoWN2.mkv',), daemon=True).start()  # 7
 
     # Consumer
     consumerThread = threading.Thread(target=consumer).start()
