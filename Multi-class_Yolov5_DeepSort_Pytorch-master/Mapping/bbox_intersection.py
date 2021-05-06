@@ -231,10 +231,6 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
             class_bbox = classes_list[index]
             end = False
 
-            if class_bbox == 2:
-                class_bbox = 0
-            elif class_bbox == 3:
-                class_bbox = 1
 
             switcher = 0  # Switch between row/column search
 
@@ -274,10 +270,6 @@ def find_intersections(bbox_list, mapObjects_list, classes_list, camera_id_list)
                         else:
 
                             if index in available_bboxes:
-                                if classes_list[index[0]] == 2:
-                                    classes_list[index[0]] = 0
-                                elif classes_list[index[0]] == 3:
-                                    classes_list[index[0]] = 1
                                 if all([iou_matrix[i,index] > 0 for i in intersected_bbox]) and (class_bbox == classes_list[index[0]]):
                                     intersected_bbox.append(int(index))
                                     available_bboxes.remove(index)
@@ -476,7 +468,9 @@ def map_bboxes(bbox_list, mapObjects_list, classes_list):
 
                 polygon_obj = [[xTL, yTL], [xTR, yTR], [xBR, yBR], [xBL, yBL]]
                 areaPolygon = areaOfPolygon(polygon_obj)
-                if areaPolygon >= 250:
+
+                threshold = 2500 if classes_list[index] == 0 else 250
+                if areaPolygon >= threshold:
                     bbox_all_list = np.append(bbox_all_list, [[xTL, yTL, xTR, yTR, xBR, yBR, xBL, yBL, classes_list[index]]], axis=0)
                     classes_list_new.append(classes_list[index])
 

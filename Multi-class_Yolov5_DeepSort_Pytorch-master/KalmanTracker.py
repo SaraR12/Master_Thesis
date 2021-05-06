@@ -36,14 +36,14 @@ def InitUKFTracker(measurement_list, cls_list, filterlist=None):
 
     number_of_objects = len(measurement_list)
     if filterlist is not None:
-        number_of_filters = len(filterlist)
+        endID = filterlist[-1].id
         for i in range(number_of_objects):
             filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1 / 24, hx=hxCT, fx=fxCT, points=points,
-                                                     cls=cls_list[i], id=number_of_filters + 1 + i, maxAge=50))
+                                                     cls=cls_list[i], id=endID + 1 + i, maxAge=7))
     else:
         for i in range(number_of_objects):
             filter_list.append(UnscentedKalmanFilter(dim_x=5, dim_z=2, dt=1/24, hx=hxCT, fx=fxCT, points=points,
-                                                     cls=cls_list[i], id=i, maxAge=50))
+                                                     cls=cls_list[i], id=i, maxAge=7))
 
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
         center = calculateCenterPoint(measurement)
@@ -70,23 +70,26 @@ def predictUKFTracker(filter_list, x_list):
 
     return filter_list, x_list,cls_list
 
-def updateUKFTracker(filter_list, x_list, measurement_list):
+def updateUKFTracker(filter_list, x_list, measurement_list, opticalflow_list):
+    toBeRemoved = []
     for (i, filter), measurement in zip(enumerate(filter_list), measurement_list):
         if measurement != []:
+            center = calculateCenterPoint(measurement)
 
-            _center = calculateCenterPoint(measurement)
-
-            filter.update(_center)
+            filter.update(center)
             filter.age = 0
 
             x_list[i] = filter.x
         else:
             filter.age += 1
             if filter.age > 6:
-                filter_list.pop(i)
-                x_list.pop(i)
+                toBeRemoved.append(i)
+    for i in toBeRemoved:
+        filter_list.pop(i)
+        x_list.pop(i)
+        opticalflow_list.pop(i)
 
-    return filter_list, x_list
+    return filter_list, x_list, opticalflow_list
 
 def preprocessMeasurements(measurement_list):
     output_measurement = []  # xyah
@@ -163,9 +166,10 @@ def association(filter_list, mean_list, measurement_list, class_list):
         col = associated_measurement_matrix[:,i]
         association_index = np.argmin(col)
         distance_between_state_measurement = col[association_index]
-        if distance_between_state_measurement < 65:
+        if distance_between_state_measurement < 95:
             associated_measurement_list[association_index] = measurement_list[i]
         else:
+
             unassociated_measurement_list.append(measurement_list[i])
             unassociated_class_list.append(class_list[i])
     return associated_measurement_list, unassociated_measurement_list, unassociated_class_list

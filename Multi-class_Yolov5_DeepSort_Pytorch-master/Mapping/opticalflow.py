@@ -104,8 +104,8 @@ class OpticalFlow:
         state = [center_point_change_xy, heading_xy]
         # state = [frame, id, camera ID = -1, class, np.array(prev_x prev_y), np.array(x, y), np.array(dx, dy)]
 
-        self.last_frame = self.frame
-        self.last_center_point = self.center_point
+        self.last_frame = frame
+        self.last_center_point = center_point
 
         ############REMOVE LATER ###########
         if writeDict:

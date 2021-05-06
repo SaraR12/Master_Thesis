@@ -202,13 +202,6 @@ def consumer():
                 classes_list = [classesWN.tolist() + classesMSW.tolist() + classesNS.tolist() +
                                 classesM.tolist() + classesEN.tolist() + classesME.tolist() + classesWN2.tolist()][0]
 
-                # Somehow when we trained the network class 2 and 0 was AGV and 3 and 1 Human
-                for i, cls in enumerate(classes_list):
-                    if cls == 2:
-                        classes_list[i] = 0
-                    elif cls == 3:
-                        classes_list[i] = 1
-
                 # Want to plot all boundinboxes on one image and only plot kalman on the other so copy the image we want to plot on
                 VIDEOFRAME2 = np.copy(VIDEOFRAME)
 
@@ -225,8 +218,9 @@ def consumer():
                 intersecting_bboxes, intersecting_classes_list = find_intersections(bbox_all_list, mapping_objects, classes_list, cam_id_list)
 
                 intersected_bboxes, measurements = compute_multiple_intersection_bboxes(intersecting_bboxes, bbox_all_list, classes_list)
-                img2 = draw_bboxesTEMP(intersected_bboxes, VIDEOFRAME)
-                cv2.imshow('Intersected', img2)
+                #img2 = draw_bboxesTEMP(intersected_bboxes, VIDEOFRAME)
+                #cv2.imshow('Intersected', img2)
+                img2 = VIDEOFRAME
                 #################################### KALMAN FILTERING ######################################################
 
                 if frame == 1:
@@ -240,6 +234,8 @@ def consumer():
 
                     for (id, point), cls in zip(enumerate(x_list), classlist_bbox):
                         opticalflow_list.append(OpticalFlow(frame, id, point, cls))
+                    """for (id, point), cls, filter in zip(enumerate(x_list), classlist_bbox, filter_listUKF):
+                        filter.InitOpticalFlow(frame, id, point, cls)"""
 
                 elif frame > 1:
                     bbox_xyah, classlist_bbox = preprocessMeasurements(measurements)
@@ -251,10 +247,14 @@ def consumer():
                     if unassociated_bbox_xyah != []:
                         filter_listUKFnew, x_listnew = InitUKFTracker(unassociated_bbox_xyah, unassociated_class_list, filterlist=filter_listUKF)
 
+
+                        for (id, point), cls in zip(enumerate(x_listnew), unassociated_class_list):
+                            opticalflow_list.append(OpticalFlow(frame, id, point, cls))
                         filter_listUKF.append(filter_listUKFnew[0])
                         x_list.append(x_listnew[0])
+                        #bbox_xyah.append(unassociated_bbox_xyah[0])
 
-                    filter_listUKF, x_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah)
+                    filter_listUKF, x_list, opticalflow_list = updateUKFTracker(filter_listUKF, x_list, bbox_xyah, opticalflow_list)
                     #heatmap = heatmap_obj.update(x_list, classlist_bbox_test)
                     filtered_positions(x_list, frame)
 
@@ -289,8 +289,8 @@ def consumer():
                     continue"""
                 cv2.waitKey(1)
                 frame += 1
-                if frame == 5:
-                    print('xdrift')
+                """if frame == 293:
+                    print('xdrift')"""
 
                 ret, VIDEOFRAME = CAP.read()
                 VIDEOFRAME = cv2.resize(VIDEOFRAME, (W, H))

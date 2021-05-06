@@ -277,6 +277,7 @@ class UnscentedKalmanFilter(object):
         if maxAge is not None:
             self.maxAge = maxAge
             self.age = 0
+
         ###################################################
         self.x = zeros(dim_x)
         self.P = eye(dim_x)*100
@@ -351,6 +352,88 @@ class UnscentedKalmanFilter(object):
         # these will always be a copy of x,P after update() is called
         self.x_post = self.x.copy()
         self.P_post = self.P.copy()
+
+        self.last_frame = 0
+
+        self.frame = 0
+    def InitOpticalFlow(self, frame, id_b, center_point, class_name):
+        self.frame = 0
+        self.last_frame = 0
+        self.id_b = id_b
+        self.last_center_point = center_point
+        self.this_center_point = center_point
+        self.class_name = class_name
+        self.opt_dict = {}
+
+    def CallOpticalFlow(self, frame, id_b, center_point, class_name, writeDict=False):
+
+        ### REMOVE LATER ####
+        if writeDict:
+            PATH_DICT = './outputs/dict_test.txt'
+            PATH_OUT = './outputs/optical_test.txt'
+
+        # Fill dictonary
+        '''if str(id_b) not in self.opt_dict: # If no stored info about current ID, add info.
+            # Add first ID found
+            self.opt_dict[str(id_b)] = [id_b, frame, frame, BBOX, BBOX, class_name]
+            # Can not make calculations here since no info about ID is stored
+
+            #print('Found new ID and added to dictionary')
+        else:
+            #print('Existing ID in dict')
+
+            # Extract info from dictonary for ID
+            ID, f_last, f_curr, bbox_last, bbox_curr, class_name = self.opt_dict[str(id_b)]
+        '''
+        # Update parameters
+        self.id_b = id_b # update ID
+        '''self.last_frame = f_curr # Update last frame to the previous current frame'''
+        self.frame = frame # Update current frame to input frame
+        '''self.last_BBOX = bbox_curr # Update last bbox to the previous current bbox'''
+
+        self.this_center_point = center_point # Update to new center point
+        self.class_name = class_name # Update class_name
+
+        # Add new info to dictonary
+        #self.opt_dict[str(self.id_b)] = [self.id_b, self.last_frame, self.frame, self.last_center_point, self.this_center_point, self.class_name ]
+
+        if writeDict:
+            with open(PATH_DICT, 'a') as fs:
+                fs.write(str(self.opt_dict[str(self.id_b)]) + "\n")
+
+        #### COMPUTATIONS ####
+
+        # Frame delta
+        frame_delta = self.frame - self.last_frame
+
+        # Box delta in pixels/frame, vector of delta x and delta y
+        if frame_delta == 0:
+            center_point_change_xy = (self.this_center_point - self.last_center_point)
+            heading_xy = math.atan(center_point_change_xy[1]/center_point_change_xy[0])
+            heading_xy = math.degrees(heading_xy)
+        else:
+            try:
+                center_point_change_xy = (self.this_center_point - self.last_center_point)/frame_delta
+            except:
+                print('failing')
+                center_point_change_xy = [1, 1]
+            heading_xy = math.atan(center_point_change_xy[1] / center_point_change_xy[0])
+            heading_xy = math.degrees(heading_xy)
+
+            #state = [self.frame, self.id_b, -1, self.class_name, np.array([last_box_center_x, last_box_center_y]), np.array([this_box_center_x, this_box_center_y]), box_delta_xy]
+        state = [center_point_change_xy, heading_xy]
+        # state = [frame, id, camera ID = -1, class, np.array(prev_x prev_y), np.array(x, y), np.array(dx, dy)]
+
+        self.last_frame = frame
+        self.last_center_point = center_point
+
+        ############REMOVE LATER ###########
+        if writeDict:
+            with open(PATH_OUT, 'a') as fs:
+                fs.write(str(state) + "\n")
+        ####################################
+
+        return state
 
     def predict(self, dt=None, UT=None, fx=None, **fx_args):
         r"""
