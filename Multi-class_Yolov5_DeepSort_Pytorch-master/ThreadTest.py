@@ -103,6 +103,8 @@ def consumer():
 
     output1 = []
     outputFiltered1 = []
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    outputVid = cv2.VideoWriter('LargeWarehouseVideo.avi', fourcc, 20, (W, H))
     i = 0
     frame = 1
     plt.show()
@@ -279,10 +281,12 @@ def consumer():
                 fps = frame/(new_time - prev_time)
                 fps = round(fps,2)
                 print('Frame: ', frame)
-                cv2.putText(img2,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
+                #cv2.putText(img2,str(fps),(7,70), cv2.FONT_HERSHEY_PLAIN, 3, (0,0,0),3,cv2.LINE_AA)
                 cv2.imshow('overview', img)
                 cv2.imshow('Intersected', img2)
-
+                outputVid.write(img2)
+                if frame == 299:
+                    outputVid.release()
 
                 # To step through frames
                 """if cv2.waitKey(0) == 33:

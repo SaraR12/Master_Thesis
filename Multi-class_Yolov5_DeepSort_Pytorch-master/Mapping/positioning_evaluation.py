@@ -67,7 +67,7 @@ def filtered_positions(states, frame):
         print('Total error', total_error)
         print('-----------------------------------------')
     print('TOTAL ERROR ', np.mean(combined_total_error))
-    if frame == 299:
+    if frame == 298:
         print('MEDIAN ', np.median(combined_total_error))
         #print('Mean error AGV1 = ', np.mean(agv1error))
         """print('Mean error AGV2 = ', np.mean(agv2error))
@@ -166,7 +166,9 @@ def filtered_positions(states, frame):
         ax1.legend(), ax2.legend()"""
 
         plt.plot(range(len(true_velocity)), true_velocity, label='True Velocity')
+
         plt.plot(range(len(estimated_velocity)), estimated_velocity, label='Estimated Velocity')
+        plt.plot(range(len(estimated_velocity)), np.ones(len(estimated_velocity))*0.4519921169328904, label='Mean Velocity Error')
         plt.legend()
         plt.title('Comparison between estimated and true velocity')
         plt.xlabel('Frame')
