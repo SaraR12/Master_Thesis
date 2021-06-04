@@ -76,20 +76,20 @@ def filtered_positions(states, frame):
         print('Mean error AGV5 = ', np.mean(agv5error))"""
 
 
-        """fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+        fig, (ax1, ax2, ax3) = plt.subplots(1,3)
         fig.suptitle('Positioning Error (meter)')
-        ax1.plot(range(len(agv1error)), agv1error, label='Error')
-        ax1.plot(range(len(agv1error)), np.ones(len(agv1error)) * np.mean(combined_total_error), label='Mean Error')
+        ax1.plot(range(len(agv1error)), np.abs(agv1error), label='Error')
+        ax1.plot(range(len(agv1error)), np.ones(len(agv1error)) * np.mean(np.abs(combined_total_error)), label='Mean Error')
 
 
-        ax2.plot(range(len(errorx)), errorx, label='Error')
-        ax2.plot(range(len(errorx)), np.ones(len(errorx)) * np.mean(errorx), label='Mean Error')
+        ax2.plot(range(len(errorx)), np.abs(errorx), label='Error')
+        ax2.plot(range(len(errorx)), np.ones(len(errorx)) * np.mean(np.abs(errorx)), label='Mean Error')
 
-        ax3.plot(range(len(errory)), errory, label='Error')
-        ax3.plot(range(len(errory)), np.ones(len(errory)) * np.mean(errory), label='Mean Error')"""
+        ax3.plot(range(len(errory)), np.abs(errory), label='Error')
+        ax3.plot(range(len(errory)), np.ones(len(errory)) * np.mean(np.abs(errory)), label='Mean Error')
 
 
-        """ax1.legend()
+        ax1.legend()
         ax2.legend()
         ax3.legend()
 
@@ -108,7 +108,7 @@ def filtered_positions(states, frame):
         #ax4.plot(range(len(agv4error)), agv4error)
         #ax5.plot(range(len(agv5error)), agv5error)
         plt.show()
-        cv2.waitKey(0)"""
+        cv2.waitKey(0)
 
 
 

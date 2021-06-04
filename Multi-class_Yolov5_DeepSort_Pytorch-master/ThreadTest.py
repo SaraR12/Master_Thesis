@@ -289,8 +289,8 @@ def consumer():
                     outputVid.release()
 
                 # To step through frames
-                """if cv2.waitKey(0) == 33:
-                    continue"""
+                if cv2.waitKey(0) == 33:
+                    continue
                 cv2.waitKey(1)
                 frame += 1
                 """if frame == 293:

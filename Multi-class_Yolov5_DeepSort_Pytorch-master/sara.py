@@ -80,6 +80,8 @@ def consumer():
     VIDEOFRAME = PLANE
     ret, VIDEOFRAME = CAP.read()
     VIDEOFRAME = cv2.resize(VIDEOFRAME, (H, W))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    videoOut = cv2.VideoWriter('')
 
     # Get all the homographies to the different cameras
     pts_src, pts_dst = getKeypoints('BL')
